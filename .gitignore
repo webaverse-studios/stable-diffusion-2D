@@ -1,0 +1,5 @@
+stable-diffusion-v1-5
+*.zip
+*.cog
+__MACOSX
+__pycache__

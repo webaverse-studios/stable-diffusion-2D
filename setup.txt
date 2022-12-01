@@ -1,0 +1,27 @@
+
+
+### Conda Create From YML
+conda env create  python=3.7 --file environment.yml
+
+### Conda Activate
+conda activate unicorn
+
+### Run Cog
+sudo docker run -d --rm -p 5000:5000 cog-unicorn
+
+### Cog Build
+sudo cog build
+
+### Cog Predict
+sudo cog predict -i model=sn_big_rifle.pkl -i input=@./demo/00.jpg
+
+### Run docker file 
+sudo docker run -d --rm -p 5000:5000 cog-unicorn
+
+
+### Docker Tag
+sudo docker tag cog-unicorn zerefdragoneel/unicorn:latest
+
+
+### Docker Push to Live
+sudo docker push zerefdragoneel/unicorn:latest
