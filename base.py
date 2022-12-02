@@ -1,10 +1,11 @@
 
+
 import base64
 import io
 from PIL import Image
 import torch
 from torch import autocast
-from diffusers import StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler
+from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, EulerDiscreteScheduler
 from pathlib import Path
 
 #device = "cuda" means that the model should go in the available GPU, we can
@@ -67,21 +68,82 @@ def load_image_generalised(image_path):
 
 def inference(pipe, \
               init_img,\
-              prompts = ["2D game art of pink cotton candy tree, centered, black background"], \
-              negative_prompt =  "blurry, noisy, grunge, 3d, amateur, dirt, fabric, checkered, sloppy, scratchy, monotone, duotone, atari, vintage, lacking, washed out, muddy, ((((compressed)))), text!!!, watermark!!!",\
+              prompts = ["blue house", "blacksmith workshop"], \
               strength=0.90,\
               num_inference_steps = 20,\
               guidance_scale=20,
               device = "cuda"):
-    
-    generator = torch.Generator(device=device).manual_seed(1024)
+  
+  # print(prompts)
+  negative_prompt =  "isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"
+  prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
+  negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
+  # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
-    images = pipe(prompt=prompts,\
-                negative_prompt = negative_prompt,\
-                init_image=init_img, 
-                strength=strength, 
-                num_inference_steps = num_inference_steps,
-                guidance_scale=guidance_scale, generator=generator)
-        
-    #Returns a List of PIL Images
-    return images[0]
+  generator = torch.Generator(device=device).manual_seed(1024)
+  with autocast("cuda"):
+      images = pipe(prompt=prompts_postproc,\
+                  negative_prompt = negative_prompt,\
+                  init_image=init_img, 
+                  strength=strength, 
+                  num_inference_steps = num_inference_steps,
+                  guidance_scale=guidance_scale, generator=generator)
+      
+  #Returns a List of PIL Images
+  return images[0]
+
+
+
+
+  #-------------------------- TEXT2IMG ----------------------------------------
+
+  #device = "cuda" means that the model should go in the available GPU, we can
+#also make it go to a specific GPU if multiple GPUs are available.
+#Example: device = "cuda:2" would cause the model to load into GPU #3
+def init_txt2img_model(local_model_path = "./stable-diffusion-v1-5", device = "cuda"):
+  DPM_scheduler = DPMSolverMultistepScheduler(
+    beta_start=0.00085,
+    beta_end=0.012,
+    beta_schedule="scaled_linear",
+    num_train_timesteps=1000,
+    trained_betas=None,
+    predict_epsilon=True,
+    thresholding=False,
+    algorithm_type="dpmsolver++",
+    solver_type="midpoint",
+    lower_order_final=True,
+)
+  
+  pipe = StableDiffusionPipeline.from_pretrained(
+    local_model_path,
+    revision="fp16", 
+    scheduler = DPM_scheduler
+    # torch_dtype=torch.float16
+  )
+  pipe = pipe.to(device)
+  return pipe
+
+
+def inference_txt2img(pipe, \
+              prompts = ["blue house", "blacksmith workshop"], \
+              strength=0.90,\
+              num_inference_steps = 20,\
+              guidance_scale=20,
+              device = "cuda"):
+  
+  # print(prompts)
+  negative_prompt =  "isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"
+  prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
+  negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
+  # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
+
+  generator = torch.Generator(device=device).manual_seed(1024)
+  with autocast("cuda"):
+      images = pipe(prompt=prompts_postproc,\
+                  negative_prompt = negative_prompt,\
+                  strength=strength, 
+                  num_inference_steps = num_inference_steps,
+                  guidance_scale=guidance_scale, generator=generator)
+      
+  #Returns a List of PIL Images
+  return images[0]

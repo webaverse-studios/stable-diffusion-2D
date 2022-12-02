@@ -3,6 +3,8 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, load_image_generalised, inference
+from PIL import Image
+
 import base64
 
 import urllib.request
@@ -19,6 +21,7 @@ pipe = init_model(local_model_path = "./stable-diffusion-v1-5")
 def separate_prompts(inp_str: str):
   prompts = [x.strip() for x in inp_str.split(':')]
   return prompts
+
 
 
 # import unicorn here
@@ -60,14 +63,12 @@ class Predictor(BasePredictor):
             print('Images are',images)
 
             for image in images:
-                image_64_encode = base64.b64encode(image.tobytes())
-                image = image_64_encode.decode("utf-8")
-                images_.append(image)
+                images_.append(cut(image))
 
             res = dict()
             res['ip'] = external_ip
             res['file'] = images_
-                        
+
             return res
         except Exception as e:
             return f"Error: {e}"
