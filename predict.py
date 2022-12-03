@@ -3,6 +3,7 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, load_image_generalised, inference
+from postprocess import cut
 from PIL import Image
 
 import base64
@@ -38,9 +39,11 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        input: Path = Input(description="Image to classify"),
-        prompts: str = Input(description="Prompts", default="top-down view of a blue house exterior with a large roof, surrounded by completely black, (stardew valley), strdwvlly style, completely black background, HD, detailed, clean lines, realistic"),
-        negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
+        input: Path = Input(description="Init Image for Img2Img"),
+        prompts: str = Input(description="Prompts", default="blue house: fire cathedral   "),
+        strength: int = Input(description="Denoising strength of Stable Diffusion", default=0.85),
+        guidance_scale: int = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
+        # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -50,9 +53,9 @@ class Predictor(BasePredictor):
 
             images = inference(pipe, init_img, \
                             prompts = separate_prompts(prompts), \
-                            negative_prompt= separate_prompts(negative_prompt),
-                            strength = 1.0,
-                            guidance_scale = 7.5)
+                            # negative_prompt= separate_prompts(negative_prompt),
+                            strength = strength,
+                            guidance_scale = guidance_scale)
 
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
