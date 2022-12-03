@@ -11,7 +11,7 @@ def splitHeightTo2(img: Image):
     for i in range(box_count):
         box = (0, box_height * i, width, box_height * (i + 1))
         a = img.crop(box)
-        images.append(a)
+        images.append(img2b4(a))
     return images
 
 def splitImageTo9(img: Image):
@@ -24,7 +24,7 @@ def splitImageTo9(img: Image):
         for j in range(box_count):
             box = (box_width * j, box_height * i, box_width * (j + 1), box_height * (i + 1))
             a = img.crop(box)
-        images.append(a)
+        images.append(img2b4(a))
     return images
 
 
@@ -45,10 +45,13 @@ def cut(img: Image, format = 'PNG'):
             if abs(pixel[0] - most_frequent_pixel[1][0]) < 10 and abs(pixel[1] - most_frequent_pixel[1][1]) < 10 and abs(pixel[2] - most_frequent_pixel[1][2]) < 10:
                 img.putpixel((x, y), (255, 255, 255, 0))
                 
-    
+    return img
+
+
+
+def img2b4(img: Image, format = 'PNG'):
     im_file = BytesIO()
     img.save(im_file, format=format)
     im_bytes = im_file.getvalue()  
-    im_b64 = base64.b64encode(im_bytes)
-
-    return im_b64
+    im_b64 = base64.b64encode(im_bytes).decode('utf-8')
+    return f'data:image/{format.lower()};base64,{im_b64}'   

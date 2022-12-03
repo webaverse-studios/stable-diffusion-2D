@@ -3,7 +3,7 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, load_image_generalised, inference
-from postprocess import cut
+from postprocess import cut, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 import base64
@@ -36,6 +36,7 @@ class Output(BaseModel):
 class Predictor(BasePredictor):
     def setup(self):
         """Load the model into memory to make running multiple predictions efficient"""
+        print('Stable Diffusion started!')
 
     def predict(
         self,
@@ -43,6 +44,7 @@ class Predictor(BasePredictor):
         prompts: str = Input(description="Prompts", default="blue house: fire cathedral   "),
         strength: int = Input(description="Denoising strength of Stable Diffusion", default=0.85),
         guidance_scale: int = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
+        split : str = Input(description="Decide which split needs to happen", default="none")
         # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:
         """Run a single prediction on the model"""
@@ -58,6 +60,10 @@ class Predictor(BasePredictor):
                             guidance_scale = guidance_scale)
 
 
+
+            
+
+
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
 
@@ -68,9 +74,21 @@ class Predictor(BasePredictor):
             for image in images:
                 images_.append(cut(image))
 
+
+            splitted_images = []
+
+            for cutImage in images_:
+                if split == "splitHeightTo2":
+                   splitted_images.append(splitHeightTo2(cutImage))
+                elif split == "splitImageTo9":
+                   splitted_images.append(splitImageTo9(cutImage))
+                else:
+                    splitted_images.append([img2b4(cutImage)])
+
+
             res = dict()
             res['ip'] = external_ip
-            res['file'] = images_
+            res['file'] = splitted_images
 
             return res
         except Exception as e:

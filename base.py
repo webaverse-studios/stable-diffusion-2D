@@ -80,6 +80,8 @@ def inference(pipe, \
   negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
   # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
+
+
   generator = torch.Generator(device=device).manual_seed(1024)
   with autocast("cuda"):
       images = pipe(prompt=prompts_postproc,\
@@ -88,7 +90,7 @@ def inference(pipe, \
                   strength=strength, 
                   num_inference_steps = num_inference_steps,
                   guidance_scale=guidance_scale, generator=generator)
-      
+  print(images)    
   #Returns a List of PIL Images
   return images[0]
 
