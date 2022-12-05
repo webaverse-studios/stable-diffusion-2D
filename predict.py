@@ -42,8 +42,8 @@ class Predictor(BasePredictor):
         self,
         input: Path = Input(description="Init Image for Img2Img"),
         prompts: str = Input(description="Prompts", default="blue house: fire cathedral   "),
-        strength: int = Input(description="Denoising strength of Stable Diffusion", default=0.85),
-        guidance_scale: int = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
+        strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
+        guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none")
         # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:

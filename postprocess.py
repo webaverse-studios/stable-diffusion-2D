@@ -16,7 +16,7 @@ def splitHeightTo2(img: Image):
 
 def splitImageTo9(img: Image):
     width, height = img.size
-    box_count = 3
+    box_count = 9
     box_width = width / box_count
     box_height = height / box_count
     images = []
