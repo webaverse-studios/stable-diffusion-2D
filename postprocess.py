@@ -16,17 +16,15 @@ def splitHeightTo2(img: Image):
 
 def splitImageTo9(img: Image):
     width, height = img.size
-    box_count = 9
-    box_width = width / box_count
-    box_height = height / box_count
+    box_width = width / 3
+    box_height = height / 3
     images = []
-    for i in range(box_count):
-        for j in range(box_count):
+    for i in range(3):
+        for j in range(3):
             box = (box_width * j, box_height * i, box_width * (j + 1), box_height * (i + 1))
             a = img.crop(box)
-        images.append(img2b4(a))
+            images.append(img2b4(a))
     return images
-
 
 def cut(img: Image, format = 'PNG'):
     img = img.convert('RGBA')
