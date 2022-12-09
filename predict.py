@@ -16,7 +16,11 @@ import torch
 print('cuda status is',torch.cuda.is_available())
 
 
-pipe = init_model(local_model_path = "./stable-diffusion-v1-5")
+#strdwvlly style model for generating assets with black background
+pipe_asset = init_model(local_model_path = "./stable-diffusion-v1-5")
+
+#Texture model ('smlss style') for generating tiles/textures
+pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
 
 
 def separate_prompts(inp_str: str):
@@ -44,20 +48,31 @@ class Predictor(BasePredictor):
         prompts: str = Input(description="Prompts", default="blue house: fire cathedral   "),
         strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
-        split : str = Input(description="Decide which split needs to happen", default="none")
+        split : str = Input(description="Decide which split needs to happen", default="none"),
+        req_type: str = Input(description="Describes whether the request is for an object asset or a tile")
         # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:
         """Run a single prediction on the model"""
         try:
-            global pipe
+            global pipe_asset, pipe_tile
 
             init_img = load_image_generalised(input)
 
-            images = inference(pipe, init_img, \
+            images = None
+            if req_type == 'asset':
+                images = inference(pipe_asset, init_img, \
                             prompts = separate_prompts(prompts), \
-                            # negative_prompt= separate_prompts(negative_prompt),
                             strength = strength,
-                            guidance_scale = guidance_scale)
+                            guidance_scale = guidance_scale,
+                            req_type = req_type)
+            
+            #else assume it to be a request for tiles
+            else:
+                images = inference(pipe_tile, init_img, \
+                            prompts = separate_prompts(prompts), \
+                            strength = strength,
+                            guidance_scale = guidance_scale,
+                            req_type = req_type)
 
 
 
