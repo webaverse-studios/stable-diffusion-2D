@@ -86,8 +86,9 @@ class Predictor(BasePredictor):
 
             print('Images are',images)
 
-            for image in images:
-                images_.append(cut(image))
+            if req_type != "tile":
+                for image in images:
+                    images_.append(cut(image))
 
 
             splitted_images = []
