@@ -49,7 +49,7 @@ class Predictor(BasePredictor):
         strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
-        req_type: str = Input(description="Describes whether the request is for an object asset or a tile")
+        req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset")
         # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:
         """Run a single prediction on the model"""
@@ -76,11 +76,7 @@ class Predictor(BasePredictor):
 
 
 
-            
-
-
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
-
 
             images_ = []
 
@@ -90,6 +86,9 @@ class Predictor(BasePredictor):
                 for image in images:
                     images_.append(cut(image))
 
+            else:
+                for image in images:
+                    images_.append(image)
 
             splitted_images = []
 
