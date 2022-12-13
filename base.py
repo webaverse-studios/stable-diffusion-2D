@@ -108,7 +108,7 @@ def inference(pipe, \
                     num_inference_steps = num_inference_steps,
                     guidance_scale=guidance_scale, generator=generator)
     images = images[0]
-    images = [x.resize((64,64),0).resize((512,512),0) for x in images]
+    #images = [x.resize((64,64),0).resize((512,512),0) for x in images]
       
   #Returns a List of PIL Images
   return images
