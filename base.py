@@ -72,16 +72,16 @@ def inference(pipe, \
               strength: float = 0.90,\
               num_inference_steps: int = 20,\
               guidance_scale: float =20,
+              negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry",
               req_type = "asset",
               device = "cuda"):
   
   # print(prompts)
-  negative_prompt =  "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry"
   prompts_postproc = None
   images = None
   if req_type == 'asset':
     prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
-    negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
+    negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
     generator = torch.Generator(device=device).manual_seed(1024)
@@ -96,7 +96,7 @@ def inference(pipe, \
   else:
     prompts = [x.replace('tile', 'texture') for x in prompts]
     prompts_postproc = [f'{prompt}, studio ghibli style, cartoon style, smlss style' for prompt in prompts]
-    negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
+    negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
     generator = torch.Generator(device=device).manual_seed(1024)
