@@ -80,7 +80,7 @@ def inference(pipe, \
   prompts_postproc = None
   images = None
   if req_type == 'asset':
-    prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
+    prompts_postproc = [f'{prompt}, surrounded by completely black, strdwvlly style, completely black background, HD, detailed' for prompt in prompts]
     negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
