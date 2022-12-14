@@ -50,7 +50,8 @@ class Predictor(BasePredictor):
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
-        negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
+        negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"),
+        num_inference_steps: int = Input(description="Number of denoising steps", default = 20)
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -65,7 +66,8 @@ class Predictor(BasePredictor):
                             negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
-                            req_type = req_type)
+                            req_type = req_type,
+                            num_inference_steps = num_inference_steps)
             
             #else assume it to be a request for tiles
             else:
@@ -74,7 +76,8 @@ class Predictor(BasePredictor):
                             negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
-                            req_type = req_type)
+                            req_type = req_type,
+                            num_inference_steps = num_inference_steps)
 
 
 
