@@ -17,7 +17,7 @@ print('cuda status is',torch.cuda.is_available())
 
 
 #strdwvlly style model for generating assets with black background
-pipe_asset = init_model(local_model_path = "./stable-diffusion-v1-5")
+pipe_asset = init_model(local_model_path = "./diffusers_summerstay_strdwvlly_asset_v2")
 
 #Texture model ('smlss style') for generating tiles/textures
 pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
