@@ -49,8 +49,8 @@ class Predictor(BasePredictor):
         strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
-        req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset")
-        # negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
+        req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
+        negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares") 
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -62,6 +62,7 @@ class Predictor(BasePredictor):
             if req_type == 'asset':
                 images = inference(pipe_asset, init_img, \
                             prompts = separate_prompts(prompts), \
+                            negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
                             req_type = req_type)
@@ -70,6 +71,7 @@ class Predictor(BasePredictor):
             else:
                 images = inference(pipe_tile, init_img, \
                             prompts = separate_prompts(prompts), \
+                            negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
                             req_type = req_type)
