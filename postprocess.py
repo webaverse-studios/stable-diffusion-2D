@@ -69,17 +69,18 @@ def convertcv2toPIL(cv2_im):
 def mask_from_black(PILpic, outer_tolerance=35, inner_tolerance=7):
     pic = convertPILtocv2(PILpic)
     (height, width, colors) = pic.shape
-    gray_img = cv2.cvtColor(pic , cv2.COLOR_BGR2GRAY)
-    threshold = cv2.threshold(gray_img, inner_tolerance, 255, cv2.THRESH_BINARY)[1]
-    analysis = cv2.connectedComponentsWithStats(threshold,4,cv2.CV_32S)
-    (totalLabels, label_ids, values, centroid) = analysis
-    output = np.zeros(gray_img.shape, dtype="uint8")
-    for i in range(1, totalLabels):
-      # Area of the component
-        area = values[i, cv2.CC_STAT_AREA]
-        if (area > 4000):
-            componentMask = (label_ids == i).astype("uint8") * 255
-    pic = cv2.bitwise_and(pic, pic, mask=componentMask)
+
+    # gray_img = cv2.cvtColor(pic , cv2.COLOR_BGR2GRAY)
+    # threshold = cv2.threshold(gray_img, inner_tolerance, 255, cv2.THRESH_BINARY)[1]
+    # analysis = cv2.connectedComponentsWithStats(threshold,4,cv2.CV_32S)
+    # (totalLabels, label_ids, values, centroid) = analysis
+    # output = np.zeros(gray_img.shape, dtype="uint8")
+    # for i in range(1, totalLabels):
+    #   # Area of the component
+    #     area = values[i, cv2.CC_STAT_AREA]
+    #     if (area > 4000):
+    #         componentMask = (label_ids == i).astype("uint8") * 255
+    # pic = cv2.bitwise_and(pic, pic, mask=componentMask)
 
 
     # place a tiny black square in each corner to remove any stray pixels
@@ -94,7 +95,7 @@ def mask_from_black(PILpic, outer_tolerance=35, inner_tolerance=7):
     cv2.floodFill(pic, None, (height-2,2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE) 
     cv2.floodFill(pic, None, (2,2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE) 
     cv2.floodFill(pic, None, (height-2,width-2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE)
-
+     
     #make everything anywhere in the image that is nearly black completely black. This is usually done at a lower tolerance than the outer tolerance.
     lower = np.array([0, 0, 0], dtype="uint8")
     upper = np.array([inner_tolerance, inner_tolerance, inner_tolerance], dtype="uint8")
