@@ -3,7 +3,7 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, load_image_generalised, inference
-from postprocess import cut, splitHeightTo2, splitImageTo9, img2b4
+from postprocess import cut, cutv2, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 import base64
@@ -51,7 +51,9 @@ class Predictor(BasePredictor):
         split : str = Input(description="Decide which split needs to happen", default="none"),
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
         negative_prompt: str = Input(description="Negative_Prompt", default="isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"),
-        num_inference_steps: int = Input(description="Number of denoising steps", default = 20)
+        num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
+        cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 1),
+        cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 15)
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -89,7 +91,7 @@ class Predictor(BasePredictor):
 
             if req_type != "tile":
                 for image in images:
-                    images_.append(cut(image))
+                    images_.append(cutv2(image, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol))
 
             else:
                 for image in images:
