@@ -5,33 +5,45 @@ import io
 from PIL import Image
 import torch
 from torch import autocast
-from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, EulerDiscreteScheduler
+from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline
 from pathlib import Path
 
 #device = "cuda" means that the model should go in the available GPU, we can
 #also make it go to a specific GPU if multiple GPUs are available.
 #Example: device = "cuda:2" would cause the model to load into GPU #3
-def init_model(local_model_path = "./stable-diffusion-v1-5", device = "cuda"):
-  DPM_scheduler = DPMSolverMultistepScheduler(
-    beta_start=0.00085,
-    beta_end=0.012,
-    beta_schedule="scaled_linear",
-    num_train_timesteps=1000,
-    trained_betas=None,
-    predict_epsilon=True,
-    thresholding=False,
-    algorithm_type="dpmsolver++",
-    solver_type="midpoint",
-    lower_order_final=True,
-)
-  pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda"):
+
+  #If the model is Depth assisted Img2Img model
+  if 'depth' in local_model_path:
+    pipe = StableDiffusionDepth2ImgPipeline.from_pretrained(
     local_model_path,
-    revision="fp16", 
-    scheduler = DPM_scheduler,
     torch_dtype=torch.float16
-  )
-  pipe = pipe.to(device)
-  return pipe
+    )
+    pipe = pipe.to(device)
+    return pipe
+  else:
+    #for `diffusers_summerstay_strdwvlly_asset_v2` model
+    #----------------------------------------
+    DPM_scheduler = DPMSolverMultistepScheduler(
+      beta_start=0.00085,
+      beta_end=0.012,
+      beta_schedule="scaled_linear",
+      num_train_timesteps=1000,
+      trained_betas=None,
+      predict_epsilon=True,
+      thresholding=False,
+      algorithm_type="dpmsolver++",
+      solver_type="midpoint",
+      lower_order_final=True,
+    )
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+      local_model_path,
+      revision="fp16", 
+      scheduler = DPM_scheduler,
+      torch_dtype=torch.float16
+    )
+    pipe = pipe.to(device)
+    return pipe
 
 
 #'image_path' is a local path to the image
@@ -72,7 +84,7 @@ def inference(pipe, \
               strength: float = 0.90,\
               num_inference_steps: int = 20,\
               guidance_scale: float =20,
-              negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry",
+              negative_pmpt:str = None,
               req_type = "asset",
               device = "cuda"):
   
@@ -80,33 +92,46 @@ def inference(pipe, \
   prompts_postproc = None
   images = None
   if req_type == 'asset':
-    prompts_postproc = [f'{prompt}, surrounded by completely black, strdwvlly style, completely black background, HD, detailed' for prompt in prompts]
-    negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+    #for `diffusers_summerstay_strdwvlly_asset_v2` model
+    # prompts_postproc = [f'{prompt}, surrounded by completely black, strdwvlly style, completely black background, HD, detailed' for prompt in prompts]
+    # negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry"
+
+    #for `stable-diffusion-2-depth` model
+    adjs = [x.split()[0] for x in prompts]
+    prompts_postproc = [f'{adj} {prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
+
+    if negative_pmpt is not None:  
+      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+    else:
+      negative_prompt = None
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
-    generator = torch.Generator(device=device).manual_seed(1024)
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
-                    init_image=init_img, 
+                    image=init_img, 
                     strength=strength, 
                     num_inference_steps = num_inference_steps,
-                    guidance_scale=guidance_scale, generator=generator)
+                    guidance_scale=guidance_scale)
     images = images[0]
   else:
     prompts = [x.replace('tile', 'texture') for x in prompts]
     prompts_postproc = [f'{prompt}, studio ghibli style, cartoon style, smlss style' for prompt in prompts]
-    negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+
+    if negative_pmpt is not None:  
+      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+    else:
+      negative_prompt = ["isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry" for x in range(len(prompts_postproc))]
+      
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
-    generator = torch.Generator(device=device).manual_seed(1024)
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
-                    init_image=init_img, 
+                    image=init_img, 
                     strength=strength, 
                     num_inference_steps = num_inference_steps,
-                    guidance_scale=guidance_scale, generator=generator)
+                    guidance_scale=guidance_scale)
     images = images[0]
     #images = [x.resize((64,64),0).resize((512,512),0) for x in images]
       
