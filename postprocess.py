@@ -66,22 +66,28 @@ def convertcv2toPIL(cv2_im):
     pil_im = Image.fromarray(cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB))
     return pil_im
 
-def mask_from_black(PILpic, outer_tolerance=35, inner_tolerance=7):
-    pic = convertPILtocv2(PILpic)
+def mask_from_black(generated_image, init_image, outer_tolerance=35, inner_tolerance=7, radius = 70):
+    pic = convertPILtocv2(generated_image)
+    init_pic = convertPILtocv2(init_image)
+    grey_mask = cv2.cvtColor(init_pic, cv2.COLOR_BGR2GRAY)
+    ret, starting_mask = cv2.threshold(grey_mask, 0, 255, cv2.THRESH_BINARY_INV)
     (height, width, colors) = pic.shape
-
-    # gray_img = cv2.cvtColor(pic , cv2.COLOR_BGR2GRAY)
-    # threshold = cv2.threshold(gray_img, inner_tolerance, 255, cv2.THRESH_BINARY)[1]
-    # analysis = cv2.connectedComponentsWithStats(threshold,4,cv2.CV_32S)
-    # (totalLabels, label_ids, values, centroid) = analysis
-    # output = np.zeros(gray_img.shape, dtype="uint8")
-    # for i in range(1, totalLabels):
-    #   # Area of the component
-    #     area = values[i, cv2.CC_STAT_AREA]
-    #     if (area > 4000):
-    #         componentMask = (label_ids == i).astype("uint8") * 255
-    # pic = cv2.bitwise_and(pic, pic, mask=componentMask)
-
+    gray_img = cv2.cvtColor(pic , cv2.COLOR_BGR2GRAY)
+    threshold = cv2.threshold(gray_img, inner_tolerance, 255, cv2.THRESH_BINARY)[1]
+    analysis = cv2.connectedComponentsWithStats(threshold,4,cv2.CV_32S)
+    (totalLabels, label_ids, values, centroid) = analysis
+    output = np.zeros(gray_img.shape, dtype="uint8")
+    biggest_area = 0
+    biggest_index = 0
+    for i in range(1, totalLabels):
+      # Area of the component
+        area = values[i, cv2.CC_STAT_AREA]
+        if area>biggest_area:
+            biggest_area = area
+            biggest_index = i
+        
+    componentMask = (label_ids == biggest_index).astype("uint8") * 255
+    pic = cv2.bitwise_and(pic, pic, mask=componentMask)
 
     # place a tiny black square in each corner to remove any stray pixels
     pic[0:3,0:3,:]=(0,0,0)
@@ -95,18 +101,26 @@ def mask_from_black(PILpic, outer_tolerance=35, inner_tolerance=7):
     cv2.floodFill(pic, None, (height-2,2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE) 
     cv2.floodFill(pic, None, (2,2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE) 
     cv2.floodFill(pic, None, (height-2,width-2), (0,0,0), (ot, ot, ot, ot), (ot, ot, ot, ot), cv2.FLOODFILL_FIXED_RANGE)
-     
+
     #make everything anywhere in the image that is nearly black completely black. This is usually done at a lower tolerance than the outer tolerance.
     lower = np.array([0, 0, 0], dtype="uint8")
     upper = np.array([inner_tolerance, inner_tolerance, inner_tolerance], dtype="uint8")
     cv2mask = cv2.inRange(pic, lower, upper)
+    #keep the center of the original mask and only affect the edges
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius, radius))
+    eroded = cv2.erode(starting_mask,kernel)
+    cv2mask = cv2.bitwise_or(cv2mask,eroded)
+    dilated =cv2.dilate(starting_mask, kernel)
+    cv2mask = cv2.bitwise_and(cv2mask,dilated)
     mask = convertcv2toPIL(cv2mask)
+    # cv2.imshow("mask",cv2mask)
+    # cv2.waitKey(0)
     return mask
 
-def cutv2(img: Image, format = 'PNG', outer_tolerance=15, inner_tolerance=1):
-  mask = mask_from_black(img, outer_tolerance=outer_tolerance, inner_tolerance=inner_tolerance)
-  img = img.convert('RGBA')
-  img_arr = np.array(img)
+def cutv2(generated_image:Image, init_image:Image, format = 'PNG', outer_tolerance=35, inner_tolerance=7):
+  mask = mask_from_black(generated_image, init_image, outer_tolerance=outer_tolerance, inner_tolerance=inner_tolerance)
+  generated_image = generated_image.convert('RGBA')
+  img_arr = np.array(generated_image)
   img_arr[:,:,3] = 255 - np.array(mask.convert('L'))
   return Image.fromarray(img_arr, mode = 'RGBA')
 
