@@ -117,8 +117,8 @@ def mask_from_black(generated_image, init_image, outer_tolerance=35, inner_toler
     # cv2.waitKey(0)
     return mask
 
-def cutv2(generated_image:Image, init_image:Image, format = 'PNG', outer_tolerance=35, inner_tolerance=7):
-  mask = mask_from_black(generated_image, init_image, outer_tolerance=outer_tolerance, inner_tolerance=inner_tolerance)
+def cutv2(generated_image:Image, init_image:Image, format = 'PNG', outer_tolerance=35, inner_tolerance=7, radius = 70):
+  mask = mask_from_black(generated_image, init_image, outer_tolerance=outer_tolerance, inner_tolerance=inner_tolerance, radius = radius)
   generated_image = generated_image.convert('RGBA')
   img_arr = np.array(generated_image)
   img_arr[:,:,3] = 255 - np.array(mask.convert('L'))
