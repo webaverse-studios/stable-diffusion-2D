@@ -40,7 +40,8 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
       local_model_path,
       revision="fp16", 
       scheduler = DPM_scheduler,
-      torch_dtype=torch.float16
+      torch_dtype=torch.float16,
+      safety_checker=None
     )
     pipe = pipe.to(device)
     return pipe
@@ -84,7 +85,7 @@ def inference(pipe, \
               strength: float = 0.90,\
               num_inference_steps: int = 20,\
               guidance_scale: float =20,
-              negative_pmpt:str = None,
+              negative_pmpt:str = "ugly, contrast, 3D",
               req_type = "asset",
               device = "cuda"):
   
@@ -98,7 +99,7 @@ def inference(pipe, \
 
     #for `stable-diffusion-2-depth` model
     adjs = [x.split()[0] for x in prompts]
-    prompts_postproc = [f'{adj} {prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
+    prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
 
     if negative_pmpt is not None:  
       negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
