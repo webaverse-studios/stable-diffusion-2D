@@ -98,7 +98,7 @@ def inference(pipe, \
     # negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry"
 
     #for `stable-diffusion-2-depth` model
-    adjs = [x.split()[0] for x in prompts]
+    adjs = [' '.join(x.split()[0:-1]) for x in prompts]
     prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
 
     if negative_pmpt is not None:  
