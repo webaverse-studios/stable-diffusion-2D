@@ -3,7 +3,7 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, load_image_generalised, inference
-from postprocess import cut, cutv2, splitHeightTo2, splitImageTo9, img2b4
+from postprocess import cut, cutv2, cutv3, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 import base64
@@ -54,9 +54,9 @@ class Predictor(BasePredictor):
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
         negative_prompt: str = Input(description="Negative_Prompt", default="ugly, contrast, 3D"),
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
-        cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
-        cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
-        cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70)
+        # cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
+        # cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
+        cut_radius:int = Input(description="Radius in `cutv2/cutv3` strongest component PNG masking ", default = 70)
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -94,7 +94,7 @@ class Predictor(BasePredictor):
 
             if req_type != "tile":
                 for gen_image in images:
-                    images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
+                    images_.append(cutv3(gen_image, init_img, radius = cut_radius))
             else:
                 for image in images:
                     images_.append(image)
