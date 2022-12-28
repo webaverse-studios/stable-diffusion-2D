@@ -124,3 +124,40 @@ def cutv2(generated_image:Image, init_image:Image, format = 'PNG', outer_toleran
   img_arr[:,:,3] = 255 - np.array(mask.convert('L'))
   return Image.fromarray(img_arr, mode = 'RGBA')
 
+def create_foreground_mask(input_im: Image, init_pic = None, radius = 30):
+    
+    # I don't know how to convert to the right format so I save it and reopen it
+    output_path = 'out.png'
+    input_path = "in.png"
+    input_im.save(input_path)
+    with open(input_path, 'rb') as i:
+        with open(output_path, 'wb') as o:
+            # perform background subtraction
+            input = i.read()
+            output = remove(input)
+            o.write(output)
+            im = cv2.imread(output_path, cv2.IMREAD_UNCHANGED)
+            # the alpha channel is the mask. We want one pixel less of foreground, to eliminate all the antialiased pixels
+            mask = im[:,:,3]
+            kernel = np.ones((3, 3), np.uint8)
+            mask = cv2.erode (mask, kernel)
+            # now we combine it with the mask from the init image.
+            if init_pic != None:
+                init_pic_cv2 = convertPILtocv2(init_pic)
+                grey_mask = cv2.cvtColor(init_pic_cv2, cv2.COLOR_BGR2GRAY)
+                ret, init_mask = cv2.threshold(grey_mask, 0, 255, cv2.THRESH_BINARY)
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius, radius))
+                dilated = cv2.dilate(init_mask,kernel)
+                mask = cv2.bitwise_and(mask,dilated)
+                eroded =cv2.erode(init_mask, kernel)
+                mask = cv2.bitwise_or(mask,eroded)
+            out = convertcv2toPIL(mask)
+            return out
+
+def cutv3(generated_image:Image, init_image:Image, radius = 30):
+  # mask = mask_from_black(generated_image, init_image, outer_tolerance=outer_tolerance, inner_tolerance=inner_tolerance)
+  mask = create_foreground_mask(generated_image,init_image,radius)
+  generated_image = generated_image.convert('RGBA')
+  img_arr = np.array(generated_image)
+  img_arr[:,:,3] = np.array(mask.convert('L'))
+  return Image.fromarray(img_arr, mode = 'RGBA')
