@@ -7,7 +7,7 @@ conda env create  python=3.7 --file environment.yml
 conda activate unicorn
 
 ### Run Cog
-sudo docker run -d --rm -p 5000:5000 cog-stable-diffusion-2d
+sudo docker run -d --rm -p 80:5000 cog-stable-diffusion-2d
 
 ### Cog Build
 sudo cog build
@@ -16,7 +16,7 @@ sudo cog build
 sudo cog predict -i model=sn_big_rifle.pkl -i input=@./demo/00.jpg
 
 ### Run docker file 
-sudo docker run -d --rm -p 5000:5000 cog-stable-diffusion-2d
+sudo docker run -d --rm -p 80:5000 cog-stable-diffusion-2d
 
 
 ### Docker Tag
