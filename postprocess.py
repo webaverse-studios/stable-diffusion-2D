@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from io import BytesIO
 import base64
+from rembg import remove
 
 #------------------------------------------------
 
