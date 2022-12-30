@@ -86,7 +86,6 @@ build:
     - "defusedxml==0.7.1"
     - "descartes==1.1.0"
     - "diffusers==0.10.0"
-    - "rembg==2.0.30"
     - "dill==0.3.6"
     - "distributed==2022.2.0"
     - "dm-tree==0.1.7"
