@@ -87,7 +87,8 @@ def inference(pipe, \
               guidance_scale: float =20,
               negative_pmpt:str = "ugly, contrast, 3D",
               req_type = "asset",
-              device = "cuda"):
+              device = "cuda",
+              seed = 1024):
   
   # print(prompts)
   prompts_postproc = None
@@ -107,13 +108,15 @@ def inference(pipe, \
       negative_prompt = None
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
+    generator = torch.Generator(device=device).manual_seed(seed)
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
                     image=init_img, 
                     strength=strength, 
                     num_inference_steps = num_inference_steps,
-                    guidance_scale=guidance_scale)
+                    guidance_scale=guidance_scale,
+                    generator = generator)
     images = images[0]
   else:
     prompts = [x.replace('tile', 'texture') for x in prompts]
@@ -126,13 +129,15 @@ def inference(pipe, \
       
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
+    generator = torch.Generator(device=device).manual_seed(seed)
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
                     image=init_img, 
                     strength=strength, 
                     num_inference_steps = num_inference_steps,
-                    guidance_scale=guidance_scale)
+                    guidance_scale=guidance_scale,
+                    generator = generator)
     images = images[0]
     #images = [x.resize((64,64),0).resize((512,512),0) for x in images]
       

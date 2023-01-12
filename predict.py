@@ -56,7 +56,8 @@ class Predictor(BasePredictor):
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
         cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
         cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
-        cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70)
+        cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70),
+        sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = 1024)
     ) -> Any:
         """Run a single prediction on the model"""
         try:
@@ -72,7 +73,8 @@ class Predictor(BasePredictor):
                             strength = strength,
                             guidance_scale = guidance_scale,
                             req_type = req_type,
-                            num_inference_steps = num_inference_steps)
+                            num_inference_steps = num_inference_steps,
+                            seed = sd_seed)
             
             #else assume it to be a request for tiles
             else:
@@ -82,7 +84,8 @@ class Predictor(BasePredictor):
                             strength = strength,
                             guidance_scale = guidance_scale,
                             req_type = req_type,
-                            num_inference_steps = num_inference_steps)
+                            num_inference_steps = num_inference_steps,
+                            seed = sd_seed)
 
 
 
