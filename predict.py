@@ -18,8 +18,11 @@ print('cuda status is',torch.cuda.is_available())
 
 #strdwvlly style model for generating assets with black background
 # pipe_asset = init_model(local_model_path = "./diffusers_summerstay_strdwvlly_asset_v2")
-pipe_inpaint = init_model(local_model_path = "./stable-diffusion-2-inpainting")
+pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
 
+
+#Texture model ('smlss style') for generating tiles/textures
+pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
 
 
 def separate_prompts(inp_str: str):
@@ -43,14 +46,13 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        input: Path = Input(description="Init Image for Inpaint"),
-        mask: Path = Input(description="Mask Image for Inpaint"),
+        input: Path = Input(description="Init Image for Img2Img"),
         prompts: str = Input(description="Prompts", default="blue house: fire cathedral   "),
-        # strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
+        strength: float = Input(description="Denoising strength of Stable Diffusion", default=0.85),
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
-        req_type: str = Input(description="Describes whether the request is for an object, currently only \'inpaint\'", default="inpaint"),
-        negative_prompt: str = Input(description="Negative_Prompt", default="ugly, blurry"),
+        req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
+        negative_prompt: str = Input(description="Negative_Prompt", default="ugly, contrast, 3D"),
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
         cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
         cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
@@ -59,16 +61,16 @@ class Predictor(BasePredictor):
     ) -> Any:
         """Run a single prediction on the model"""
         try:
-            global pipe_inpaint
+            global pipe_asset, pipe_tile
 
             init_img = load_image_generalised(input)
-            mask_image = load_image_generalised(mask)
 
             images = None
-            if req_type == 'inpaint':
-                images = inference(pipe_inpaint, init_img, mask_image, \
+            if req_type == 'asset':
+                images = inference(pipe_asset, init_img, \
                             prompts = separate_prompts(prompts), \
                             negative_pmpt = negative_prompt,
+                            strength = strength,
                             guidance_scale = guidance_scale,
                             req_type = req_type,
                             num_inference_steps = num_inference_steps,
@@ -76,7 +78,15 @@ class Predictor(BasePredictor):
             
             #else assume it to be a request for tiles
             else:
-                raise('predict: only Inpaint supported!')
+                images = inference(pipe_tile, init_img, \
+                            prompts = separate_prompts(prompts), \
+                            negative_pmpt = negative_prompt,
+                            strength = strength,
+                            guidance_scale = guidance_scale,
+                            req_type = req_type,
+                            num_inference_steps = num_inference_steps,
+                            seed = sd_seed)
+
 
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')

@@ -3,14 +3,10 @@
 import base64
 import io
 from PIL import Image
+import torch
+from torch import autocast
+from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline
 from pathlib import Path
-
-import oneflow as torch
-from diffusers import (
-    OneFlowDPMSolverMultistepScheduler as DPMSolverMultistepScheduler,
-    OneFlowStableDiffusionInpaintPipeline as StableDiffusionInpaintPipeline,
-)
-
 
 #device = "cuda" means that the model should go in the available GPU, we can
 #also make it go to a specific GPU if multiple GPUs are available.
@@ -18,20 +14,37 @@ from diffusers import (
 def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda"):
 
   #If the model is Depth assisted Img2Img model
-  if 'inpainting' in local_model_path:
-    dpm_solver = DPMSolverMultistepScheduler.from_config(local_model_path, subfolder="scheduler")
-    pipe = StableDiffusionInpaintPipeline.from_pretrained(
-        local_model_path,
-        # use_auth_token=True,
-        # revision="fp16",
-        torch_dtype=torch.float16,
-        scheduler=dpm_solver,
-        num_inference_steps=20,
+  if 'depth' in local_model_path:
+    pipe = StableDiffusionDepth2ImgPipeline.from_pretrained(
+    local_model_path,
+    torch_dtype=torch.float16
     )
     pipe = pipe.to(device)
     return pipe
   else:
-    raise Exception('Only OneFlow inpainting pipeline supported currently!')
+    #for `diffusers_summerstay_strdwvlly_asset_v2` model
+    #----------------------------------------
+    DPM_scheduler = DPMSolverMultistepScheduler(
+      beta_start=0.00085,
+      beta_end=0.012,
+      beta_schedule="scaled_linear",
+      num_train_timesteps=1000,
+      trained_betas=None,
+      predict_epsilon=True,
+      thresholding=False,
+      algorithm_type="dpmsolver++",
+      solver_type="midpoint",
+      lower_order_final=True,
+    )
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+      local_model_path,
+      revision="fp16", 
+      scheduler = DPM_scheduler,
+      torch_dtype=torch.float16,
+      safety_checker=None
+    )
+    pipe = pipe.to(device)
+    return pipe
 
 
 #'image_path' is a local path to the image
@@ -68,27 +81,65 @@ def load_image_generalised(image_path):
 
 def inference(pipe, \
               init_img,\
-              mask_image, \
               prompts = ["blue house", "blacksmith workshop"], \
-              # strength: float = 0.90,\
+              strength: float = 0.90,\
               num_inference_steps: int = 20,\
-              guidance_scale: float = 8,
-              negative_pmpt:str = "ugly, blurry",
-              req_type = "inpaint",
+              guidance_scale: float =20,
+              negative_pmpt:str = "ugly, contrast, 3D",
+              req_type = "asset",
               device = "cuda",
               seed = 1024):
   
-  if req_type == 'inpaint':
-    negative_pmpt = [negative_pmpt for negative_pmpt in range(len(prompts))]
+  # print(prompts)
+  prompts_postproc = None
+  images = None
+  if req_type == 'asset':
+    #for `diffusers_summerstay_strdwvlly_asset_v2` model
+    # prompts_postproc = [f'{prompt}, surrounded by completely black, strdwvlly style, completely black background, HD, detailed' for prompt in prompts]
+    # negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry"
+
+    #for `stable-diffusion-2-depth` model
+    adjs = [x.split()[0] for x in prompts]
+    prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
+
+    if negative_pmpt is not None:  
+      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+    else:
+      negative_prompt = None
+    # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
     generator = torch.Generator(device=device).manual_seed(seed)
-
-    images = pipe(prompt=prompts, image=init_img, mask_image=mask_image, num_inference_steps = num_inference_steps,\
-                    guidance_scale = guidance_scale, negative_prompt = negative_pmpt, generator = generator)
-
+    with autocast("cuda"):
+        images = pipe(prompt=prompts_postproc,\
+                    negative_prompt = negative_prompt,\
+                    image=init_img, 
+                    strength=strength, 
+                    num_inference_steps = num_inference_steps,
+                    guidance_scale=guidance_scale,
+                    generator = generator)
     images = images[0]
   else:
-    raise Exception('inference: Only inpainting supported!!')
+    prompts = [x.replace('tile', 'texture') for x in prompts]
+    prompts_postproc = [f'{prompt}, studio ghibli style, cartoon style, smlss style' for prompt in prompts]
+
+    if negative_pmpt is not None:  
+      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
+    else:
+      negative_prompt = ["isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry" for x in range(len(prompts_postproc))]
+      
+    # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
+
+    generator = torch.Generator(device=device).manual_seed(seed)
+    with autocast("cuda"):
+        images = pipe(prompt=prompts_postproc,\
+                    negative_prompt = negative_prompt,\
+                    image=init_img, 
+                    strength=strength, 
+                    num_inference_steps = num_inference_steps,
+                    guidance_scale=guidance_scale,
+                    generator = generator)
+    images = images[0]
+    #images = [x.resize((64,64),0).resize((512,512),0) for x in images]
       
   #Returns a List of PIL Images
   return images
