@@ -56,7 +56,7 @@ class Predictor(BasePredictor):
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
-        negative_prompt: str = Input(description="Negative_Prompt", default="ugly, contrast, 3D"),
+        negative_prompt: str = Input(description="Negative_Prompt", default="base, ground, terrain, child's drawing, sillhouette, dark, shadowed, green blob, cast shadow on the ground, background pattern"),
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
         cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
         cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
