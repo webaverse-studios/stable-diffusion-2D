@@ -2,8 +2,8 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 from cog import BasePredictor, BaseModel, File, Input, Path
-from base import init_model, load_image_generalised, inference
-from postprocess import cut, cutv2, splitHeightTo2, splitImageTo9, img2b4
+from base import init_model, load_image_generalised, inference, inference_w_gpt
+from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 import base64
@@ -18,11 +18,15 @@ print('cuda status is',torch.cuda.is_available())
 
 #strdwvlly style model for generating assets with black background
 # pipe_asset = init_model(local_model_path = "./diffusers_summerstay_strdwvlly_asset_v2")
-pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
+# pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
 
 
 #Texture model ('smlss style') for generating tiles/textures
 pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
+
+
+#Magenta background 2D outdoor asset model trained by summerstay
+pipe_asset_magenta = init_model(local_model_path = "./magenta_model")
 
 
 def separate_prompts(inp_str: str):
@@ -63,15 +67,16 @@ class Predictor(BasePredictor):
     ) -> Any:
         """Run a single prediction on the model"""
         try:
-            global pipe_asset, pipe_tile
-
+            # global pipe_asset 
+            global pipe_tile, pipe_asset_magenta
+            
             init_img = load_image_generalised(input)
 
             orig_img_dims = init_img.shape
 
             images = None
             if req_type == 'asset':
-                images = inference(pipe_asset, init_img, \
+                images = inference_w_gpt(pipe_asset_magenta, init_img, \
                             prompts = separate_prompts(prompts), \
                             negative_pmpt = negative_prompt,
                             strength = strength,
@@ -112,7 +117,8 @@ class Predictor(BasePredictor):
 
             if req_type != "tile":
                 for gen_image in images:
-                    images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
+                    # images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
+                    images_.append(cut_magenta(gen_image))
             else:
                 for image in images:
                     images_.append(image)
