@@ -72,7 +72,7 @@ class Predictor(BasePredictor):
             
             init_img = load_image_generalised(input)
 
-            orig_img_dims = init_img.shape
+            orig_img_dims = init_img.size
 
             images = None
             if req_type == 'asset':
@@ -108,7 +108,7 @@ class Predictor(BasePredictor):
                     height = orig_img_dims[0]
                     width = orig_img_dims[1]
 
-            for idx in len(images):
+            for idx in range(len(images)):
                 images[idx] = images[idx].resize((height,width))
 
             images_ = []
