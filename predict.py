@@ -91,7 +91,7 @@ class Predictor(BasePredictor):
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
 
-
+            print('Type of each image: ', type(images[0]))
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
@@ -103,7 +103,7 @@ class Predictor(BasePredictor):
                     height = orig_img_dims[0]
                     width = orig_img_dims[1]
 
-            for idx in len(images):
+            for idx in range(len(images)):
                 images[idx] = images[idx].resize((height,width))
 
             images_ = []
