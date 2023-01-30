@@ -103,8 +103,10 @@ class Predictor(BasePredictor):
                     height = orig_img_dims[0]
                     width = orig_img_dims[1]
 
-            for idx in range(len(images)):
-                images[idx] = images[idx].resize((height,width))
+            # for idx in range(len(images)):
+                # images[idx] = images[idx].resize((height,width))
+            images = [img.resize((height,width)) for img in images]
+            init_img = init_img.resize((height,width))
 
             images_ = []
 

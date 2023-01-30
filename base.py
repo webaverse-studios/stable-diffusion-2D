@@ -64,7 +64,7 @@ def load_image_generalised(image_path):
 
   init_img = None
   if isinstance(image_path, str) or path.is_file():
-      init_img = Image.open(image_path).convert("RGB").resize((512, 512))
+      init_img = Image.open(image_path).convert("RGB")
   else:
     # if the image is a string of bytesarray.
     init_img = base64.b64decode(image_path)
@@ -72,7 +72,7 @@ def load_image_generalised(image_path):
   # If the image is sent as bytesarray
   if isinstance(image_path, (bytearray, bytes)):
       init_img = Image.open(io.BytesIO(image_path))
-      init_img = init_img.convert("RGB").resize((512, 512))
+      init_img = init_img.convert("RGB")
 
   
   #returns a PIL Image
