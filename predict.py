@@ -65,9 +65,9 @@ class Predictor(BasePredictor):
         try:
             global pipe_asset, pipe_tile
 
-            init_img = load_image_generalised(input)
+            init_img = load_image_generalised(input, resize = True)
 
-            orig_img_dims = init_img.size
+            orig_img_dims = load_image_generalised(input, resize = False).size
 
             images = None
             if req_type == 'asset':
@@ -79,7 +79,7 @@ class Predictor(BasePredictor):
                             req_type = req_type,
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
-            
+
             #else assume it to be a request for tiles
             else:
                 images = inference(pipe_tile, init_img, \
@@ -97,7 +97,6 @@ class Predictor(BasePredictor):
 
             images_ = []
 
-            print('Images are',images)
 
             if req_type != "tile":
                 for gen_image in images:
@@ -107,29 +106,20 @@ class Predictor(BasePredictor):
                     images_.append(image)
 
             if height is None or width is None:
-                if orig_img_dims is None:
-                    height = 512
-                    width = 512
-                else:
-                    height = orig_img_dims[0]
-                    width = orig_img_dims[1]
+                height = orig_img_dims[0]
+                width = orig_img_dims[1]
 
-            # for idx in range(len(images)):
-                # images[idx] = images[idx].resize((height,width))
             images_ = [img.resize((height,width)) for img in images_]
-            # init_img = init_img.resize((height,width))
 
             splitted_images = []
 
             for cutImage in images_:
                 if split == "splitHeightTo2":
-                   splitted_images.append(splitHeightTo2(cutImage))
+                    splitted_images.append(splitHeightTo2(cutImage))
                 elif split == "splitImageTo9":
-                   splitted_images.append(splitImageTo9(cutImage))
+                    splitted_images.append(splitImageTo9(cutImage))
                 else:
                     splitted_images.append([img2b4(cutImage)])
-
-            
 
             res = dict()
             res['ip'] = external_ip
