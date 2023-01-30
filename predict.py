@@ -95,19 +95,6 @@ class Predictor(BasePredictor):
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
-            if height is None or width is None:
-                if orig_img_dims is None:
-                    height = 512
-                    width = 512
-                else:
-                    height = orig_img_dims[0]
-                    width = orig_img_dims[1]
-
-            # for idx in range(len(images)):
-                # images[idx] = images[idx].resize((height,width))
-            images = [img.resize((height,width)) for img in images]
-            init_img = init_img.resize((height,width))
-
             images_ = []
 
             print('Images are',images)
@@ -119,6 +106,19 @@ class Predictor(BasePredictor):
                 for image in images:
                     images_.append(image)
 
+            if height is None or width is None:
+                if orig_img_dims is None:
+                    height = 512
+                    width = 512
+                else:
+                    height = orig_img_dims[0]
+                    width = orig_img_dims[1]
+
+            # for idx in range(len(images)):
+                # images[idx] = images[idx].resize((height,width))
+            images_ = [img.resize((height,width)) for img in images_]
+            # init_img = init_img.resize((height,width))
+
             splitted_images = []
 
             for cutImage in images_:
@@ -129,6 +129,7 @@ class Predictor(BasePredictor):
                 else:
                     splitted_images.append([img2b4(cutImage)])
 
+            
 
             res = dict()
             res['ip'] = external_ip
