@@ -106,6 +106,7 @@ class Predictor(BasePredictor):
             # for idx in range(len(images)):
                 # images[idx] = images[idx].resize((height,width))
             images = [img.resize((height,width)) for img in images]
+            init_img = init_img.resize((height,width))
 
             images_ = []
 
