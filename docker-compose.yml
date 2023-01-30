@@ -1,0 +1,9 @@
+version: '3'
+services:
+  knime-server:
+    image: cog-stable-diffusion-2d
+    ports:
+      - 80:5000
+      - 8001:8443
+    volumes:
+      - /home/ken/stable-diffusion-2D/:/src
