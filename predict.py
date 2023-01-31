@@ -70,9 +70,9 @@ class Predictor(BasePredictor):
             # global pipe_asset 
             global pipe_tile, pipe_asset_magenta
             
-            init_img = load_image_generalised(input)
+            init_img = load_image_generalised(input, resize = True)
 
-            orig_img_dims = init_img.size
+            orig_img_dims = load_image_generalised(input, resize = False).size
 
             images = None
             if req_type == 'asset':
@@ -100,18 +100,6 @@ class Predictor(BasePredictor):
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
-            if height is None or width is None:
-                if orig_img_dims is None:
-                    height = 512
-                    width = 512
-                else:
-                    height = orig_img_dims[0]
-                    width = orig_img_dims[1]
-
-            # for idx in range(len(images)):
-                # images[idx] = images[idx].resize((height,width))
-            images = [x.resize((height,width)) for x in images]
-
             images_ = []
 
             print('Images are',images)
@@ -123,6 +111,12 @@ class Predictor(BasePredictor):
             else:
                 for image in images:
                     images_.append(image)
+
+            if height is None or width is None:
+                height = orig_img_dims[0]
+                width = orig_img_dims[1]
+
+            images_ = [img.resize((height,width)) for img in images_]
 
             splitted_images = []
 

@@ -82,7 +82,7 @@ def load_image(image_path):
 
   #'image_path' is a local path to the image or bytearray or bytestream
 #reference: https://github.com/pytorch/serve/blob/master/ts/torch_handler/vision_handler.py
-def load_image_generalised(image_path):
+def load_image_generalised(image_path, resize = False):
 
   path = Path(image_path)
 
@@ -102,7 +102,10 @@ def load_image_generalised(image_path):
 
   
   #returns a PIL Image
-  return init_img
+  if resize:
+    return init_img.resize((512,512))
+  else:
+    return init_img
 
 
 def inference(pipe, \
