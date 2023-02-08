@@ -84,7 +84,7 @@ class Predictor(BasePredictor):
                             req_type = req_type,
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
-            
+
             #else assume it to be a request for tiles
             else:
                 images = inference(pipe_tile, init_img, \
@@ -96,13 +96,12 @@ class Predictor(BasePredictor):
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
 
-
+            print('Type of each image: ', type(images[0]))
 
             external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
             images_ = []
 
-            print('Images are',images)
 
             if req_type != "tile":
                 for gen_image in images:
@@ -122,12 +121,11 @@ class Predictor(BasePredictor):
 
             for cutImage in images_:
                 if split == "splitHeightTo2":
-                   splitted_images.append(splitHeightTo2(cutImage))
+                    splitted_images.append(splitHeightTo2(cutImage))
                 elif split == "splitImageTo9":
-                   splitted_images.append(splitImageTo9(cutImage))
+                    splitted_images.append(splitImageTo9(cutImage))
                 else:
                     splitted_images.append([img2b4(cutImage)])
-
 
             res = dict()
             res['ip'] = external_ip
