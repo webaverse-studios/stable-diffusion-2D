@@ -37,8 +37,8 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
       lower_order_final=True,
     )
     pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-      # local_model_path,
-      'magenta_model',
+      local_model_path,
+#       'magenta_model',
       revision="fp16", 
       scheduler = DPM_scheduler,
       torch_dtype=torch.float16,
