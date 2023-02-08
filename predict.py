@@ -26,7 +26,7 @@ pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_text
 
 
 #Magenta background 2D outdoor asset model trained by summerstay
-pipe_asset_magenta = init_model(local_model_path = "./magenta_model")
+pipe_asset_magenta = init_model(local_model_path = "./magenta_tree_model")
 
 
 def separate_prompts(inp_str: str):
