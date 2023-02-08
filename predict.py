@@ -2,8 +2,8 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 from cog import BasePredictor, BaseModel, File, Input, Path
-from base import init_model, load_image_generalised, inference
-from postprocess import cut, cutv2, splitHeightTo2, splitImageTo9, img2b4
+from base import init_model, load_image_generalised, inference, inference_w_gpt
+from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 import base64
@@ -18,11 +18,15 @@ print('cuda status is',torch.cuda.is_available())
 
 #strdwvlly style model for generating assets with black background
 # pipe_asset = init_model(local_model_path = "./diffusers_summerstay_strdwvlly_asset_v2")
-pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
+# pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
 
 
 #Texture model ('smlss style') for generating tiles/textures
 pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
+
+
+#Magenta background 2D outdoor asset model trained by summerstay
+pipe_asset_magenta = init_model(local_model_path = "./magenta_model")
 
 
 def separate_prompts(inp_str: str):
@@ -43,7 +47,7 @@ class Predictor(BasePredictor):
     def setup(self):
         """Load the model into memory to make running multiple predictions efficient"""
         print('Stable Diffusion started!')
-
+    
     def predict(
         self,
         input: Path = Input(description="Init Image for Img2Img"),
@@ -52,26 +56,27 @@ class Predictor(BasePredictor):
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
-        negative_prompt: str = Input(description="Negative_Prompt", default="ugly, contrast, 3D"),
+        negative_prompt: str = Input(description="Negative_Prompt", default="base, ground, terrain, child's drawing, sillhouette, dark, shadowed, green blob, cast shadow on the ground, background pattern"),
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
-        cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
-        cut_outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 35),
-        cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70),
+        # cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
+        outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 80),
+        # cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70),
         sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = 1024),
         width:int = Input(description="Width for returning output image", default = None),
         height:int = Input(description="Height for returning output image", default = None)
     ) -> Any:
         """Run a single prediction on the model"""
         try:
-            global pipe_asset, pipe_tile
-
+            # global pipe_asset 
+            global pipe_tile, pipe_asset_magenta
+            
             init_img = load_image_generalised(input, resize = True)
 
             orig_img_dims = load_image_generalised(input, resize = False).size
 
             images = None
             if req_type == 'asset':
-                images = inference(pipe_asset, init_img, \
+                images = inference_w_gpt(pipe_asset_magenta, init_img, \
                             prompts = separate_prompts(prompts), \
                             negative_pmpt = negative_prompt,
                             strength = strength,
@@ -100,7 +105,8 @@ class Predictor(BasePredictor):
 
             if req_type != "tile":
                 for gen_image in images:
-                    images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
+                    # images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
+                    images_.append(cut_magenta(gen_image, outer_tol))
             else:
                 for image in images:
                     images_.append(image)
