@@ -6,6 +6,7 @@ from base import init_model, load_image_generalised, inference, inference_w_gpt,
 from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
+
 import base64
 
 import urllib.request
@@ -91,7 +92,7 @@ class Predictor(BasePredictor):
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
                 else:
-                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, canny_lower, canny_upper)
+                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
 
             #else assume it to be a request for tiles
             else:

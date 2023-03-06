@@ -8,15 +8,16 @@ import cv2
 
 import torch
 from torch import autocast
-from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline, UniPCMultistepScheduler
 from diffusers.utils import load_image
 from pathlib import Path
 import openai
 
-def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny.pth"):
-  canny_controlnet_pipe = StableDiffusionControlNetPipeline.from_pretrained(ckpt_path).to("cuda")
+def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny"):
+  canny_controlnet_pipe = StableDiffusionControlNetPipeline.from_pretrained(local_model_path).to("cuda")
   canny_controlnet_pipe.safety_checker = lambda images, clip_input: (images, False)
-  return
+  canny_controlnet_pipe.scheduler = UniPCMultistepScheduler.from_config(canny_controlnet_pipe.scheduler.config)
+  return canny_controlnet_pipe
 
 #device = "cuda" means that the model should go in the available GPU, we can
 #also make it go to a specific GPU if multiple GPUs are available.
@@ -181,7 +182,7 @@ def inference(pipe, \
   #Returns a List of PIL Images
   return images
 
-def inference_with_edge_guidance(canny_controlnet_pipe, init_image, prompts, negative_pmpt, canny_lower, canny_upper):
+def inference_with_edge_guidance(canny_controlnet_pipe, init_image, prompts, negative_pmpt, canny_lower, canny_upper, num_inference_steps = 20):
     # This uses the edges from an init image to guide the generation of a new image.
     # it outputs an image in the standard diffusers format
     # The init image is an image whose outline and major shapes you want preserved in the output
@@ -196,9 +197,9 @@ def inference_with_edge_guidance(canny_controlnet_pipe, init_image, prompts, neg
     init_image = cv2.cvtColor(np.array(init_image), cv2.COLOR_RGB2BGR)
     edge_image = cv2.Canny(init_image,canny_lower,canny_upper)
     
-    images = canny_controlnet_pipe(prompt=prompts, negative_prompt = negative_prompt, controlnet_hint=edge_image).images[0]
+    image = canny_controlnet_pipe(prompt=prompts, negative_prompt = negative_prompt, controlnet_hint=edge_image, num_inference_steps = num_inference_steps).images[0]
 
-    return images
+    return image
 
 
 def inference_w_gpt(pipe, \
