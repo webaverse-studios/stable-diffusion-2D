@@ -2,7 +2,7 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 from cog import BasePredictor, BaseModel, File, Input, Path
-from base import init_model, load_image_generalised, inference, inference_w_gpt, inference_with_edge_guidance, init_canny_controlnet
+from base import init_model, make_background_magenta, load_image_generalised, inference, inference_w_gpt, inference_with_edge_guidance, init_canny_controlnet
 from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
@@ -68,6 +68,7 @@ class Predictor(BasePredictor):
         sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = 1024),
         canny_lower:int = Input(description="Canny lower bound for general pixel model with Canny Controlnet", default = 100),
         canny_upper:int = Input(description="Canny upper bound for general pixel model with Canny Controlnet", default = 200),
+        erode_width:int = Input(description="Canny BG Removal argument", default = 5),
         width:int = Input(description="Width for returning output image", default = None),
         height:int = Input(description="Height for returning output image", default = None)
     ) -> Any:
@@ -115,7 +116,8 @@ class Predictor(BasePredictor):
             if req_type != "tile":
                 for gen_image in images:
                     # images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
-                    images_.append(cut_magenta(gen_image, outer_tol))
+                    # images_.append(cut_magenta(gen_image, outer_tol))
+                    images_.append(make_background_magenta(gen_image, init_img , erode_width))
             else:
                 for image in images:
                     images_.append(image)
