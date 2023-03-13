@@ -171,3 +171,46 @@ def cutv2(generated_image:Image, init_image:Image, format = 'PNG', outer_toleran
   img_arr[:,:,3] = 255 - np.array(mask.convert('L'))
   return Image.fromarray(img_arr, mode = 'RGBA')
 
+#------------Magenta ControlNet Canny Pixel model----------------
+
+def convertPILtocv2(im):
+    cv2_im = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+    return cv2_im
+
+def convertcv2toPIL(cv2_im):
+    (height, width, colors) = cv2_im.shape
+    if colors == 4:
+        pil_im = Image.fromarray(cv2.cvtColor(cv2_im, cv2.COLOR_BGRA2RGBA))
+    else:
+        pil_im = Image.fromarray(cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB))
+    return pil_im
+
+def make_background_magenta(PILforeground_source, PILbackground_source, erode_width):
+    # take a background source that has a pure magenta background, and replace the background on the foreground source with it.
+    # this only works well if the background source was used with controlnet to generate the foreground source.
+    # erode_width is how much the background should contract before being applied
+    foreground_source = convertPILtocv2(PILforeground_source)
+    background_source = convertPILtocv2(PILbackground_source)
+    (height, width, colors) = foreground_source.shape
+    print(foreground_source.shape)
+    background_source = cv2.resize(background_source,(width, height), interpolation=cv2.INTER_LINEAR)
+    mask =  np.all(background_source == [255,0,255], axis=-1)
+    print(mask.dtype)
+    if erode_width>0:
+        kernel = np.ones((erode_width, erode_width), np.uint8)
+        mask = cv2.erode(mask.astype(np.uint8),kernel)
+    else:
+        kernel = np.ones((-erode_width, -erode_width), np.uint8)
+        mask = cv2.dilate(mask.astype(np.uint8),kernel)
+    foreground_source[mask.astype(bool)] = [255,0,255]
+
+    # opacity = np.where(foreground_source == [255,0,255])
+    # print(opacity[0].shape)
+    transparent_array = np.zeros((foreground_source.shape[0],foreground_source.shape[1],4),np.uint8)
+    transparent_array[:,:,:3]=foreground_source
+    transparent_array[:,:,3]= np.where(foreground_source == [255,0,255], [0], [255])[:,:,0]
+
+    print(transparent_array.shape)
+
+    output = convertcv2toPIL(transparent_array)
+    return output

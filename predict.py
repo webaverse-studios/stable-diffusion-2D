@@ -2,9 +2,10 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 from cog import BasePredictor, BaseModel, File, Input, Path
-from base import init_model, load_image_generalised, inference, inference_w_gpt
+from base import init_model, make_background_magenta, load_image_generalised, inference, inference_w_gpt, inference_with_edge_guidance, init_canny_controlnet
 from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
+
 
 import base64
 
@@ -22,7 +23,9 @@ print('cuda status is',torch.cuda.is_available())
 
 
 #Texture model ('smlss style') for generating tiles/textures
-pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
+# pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
+
+pipe_asset_pixel = init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny.pth")
 
 
 #Magenta background 2D outdoor asset model trained by summerstay
@@ -56,12 +59,16 @@ class Predictor(BasePredictor):
         guidance_scale: float = Input(description="Prompt Guidance strength/Classifier Free Generation strength of Stable Diffusion", default=7.5),
         split : str = Input(description="Decide which split needs to happen", default="none"),
         req_type: str = Input(description="Describes whether the request is for an object asset or a tile", default="asset"),
+        isTree: bool = Input(description="Flag to whether to use Tree model + GPT prompting OR the general Pixel model", default=False),
         negative_prompt: str = Input(description="Negative_Prompt", default="base, ground, terrain, child's drawing, sillhouette, dark, shadowed, green blob, cast shadow on the ground, background pattern"),
         num_inference_steps: int = Input(description="Number of denoising steps", default = 20),
         # cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
         outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 80),
         # cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70),
         sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = None),
+        canny_lower:int = Input(description="Canny lower bound for general pixel model with Canny Controlnet", default = 100),
+        canny_upper:int = Input(description="Canny upper bound for general pixel model with Canny Controlnet", default = 200),
+        erode_width:int = Input(description="Canny BG Removal argument", default = 5),
         width:int = Input(description="Width for returning output image", default = None),
         height:int = Input(description="Height for returning output image", default = None)
     ) -> Any:
@@ -76,7 +83,8 @@ class Predictor(BasePredictor):
 
             images = None
             if req_type == 'asset':
-                images = inference_w_gpt(pipe_asset_magenta, init_img, \
+                if isTree:
+                    images = inference_w_gpt(pipe_asset_magenta, init_img, \
                             prompts = separate_prompts(prompts), \
                             negative_pmpt = negative_prompt,
                             strength = strength,
@@ -84,6 +92,8 @@ class Predictor(BasePredictor):
                             req_type = req_type,
                             num_inference_steps = num_inference_steps,
                             seed = sd_seed)
+                else:
+                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
 
             #else assume it to be a request for tiles
             else:
@@ -106,7 +116,8 @@ class Predictor(BasePredictor):
             if req_type != "tile":
                 for gen_image in images:
                     # images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
-                    images_.append(cut_magenta(gen_image, outer_tol))
+                    # images_.append(cut_magenta(gen_image, outer_tol))
+                    images_.append(make_background_magenta(gen_image, init_img , erode_width))
             else:
                 for image in images:
                     images_.append(image)
