@@ -126,7 +126,7 @@ def inference(pipe, \
               negative_pmpt:str = "ugly, contrast, 3D",
               req_type = "asset",
               device = "cuda",
-              seed = 1024):
+              seed = None):
   
   # print(prompts)
   prompts_postproc = None
@@ -146,7 +146,10 @@ def inference(pipe, \
       negative_prompt = None
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
-    generator = torch.Generator(device=device).manual_seed(seed)
+    generator = None
+    if seed is not None:
+      generator = torch.Generator(device=device).manual_seed(seed)
+
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
@@ -167,7 +170,10 @@ def inference(pipe, \
       
     # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
-    generator = torch.Generator(device=device).manual_seed(seed)
+    generator = None
+    if seed is not None:
+      generator = torch.Generator(device=device).manual_seed(seed)
+
     with autocast("cuda"):
         images = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_prompt,\
@@ -246,7 +252,10 @@ def inference_w_gpt(pipe, \
 
       prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
 
-      generator = torch.Generator(device=device).manual_seed(seed)
+      generator = None
+      if seed is not None:
+        generator = torch.Generator(device=device).manual_seed(seed)
+
       with autocast("cuda"):
         image = pipe(prompt=prompts_postproc,\
                     negative_prompt = negative_pmpt,\
