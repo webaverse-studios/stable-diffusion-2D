@@ -65,7 +65,7 @@ class Predictor(BasePredictor):
         # cut_inner_tol:int = Input(description="Inner tolerance in `cutv2` strongest component PNG masking ", default = 7),
         outer_tol:int = Input(description="Outer tolerance in `cutv2` strongest component PNG masking ", default = 80),
         # cut_radius:int = Input(description="Radius in `cutv2` strongest component PNG masking ", default = 70),
-        sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = 1024),
+        sd_seed:int = Input(description="Seed for SD generations for getting deterministic outputs", default = None),
         canny_lower:int = Input(description="Canny lower bound for general pixel model with Canny Controlnet", default = 100),
         canny_upper:int = Input(description="Canny upper bound for general pixel model with Canny Controlnet", default = 200),
         erode_width:int = Input(description="Canny BG Removal argument", default = 5),
