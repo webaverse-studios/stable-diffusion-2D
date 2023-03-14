@@ -65,7 +65,7 @@ debugpy==1.0.0
 decorator==4.4.2
 defusedxml==0.7.1
 descartes==1.1.0
-diffusers==0.14.0
+git+https://github.com/takuma104/diffusers.git@9a37409663a53f775fa380db332d37d7ea75c915
 dill==0.3.6
 distributed==2022.2.0
 dlib==19.24.0
