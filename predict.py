@@ -25,7 +25,7 @@ print('cuda status is',torch.cuda.is_available())
 #Texture model ('smlss style') for generating tiles/textures
 # pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
 
-pipe_asset_pixel = init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny.pth")
+pipe_asset_pixel = init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny")
 
 
 #Magenta background 2D outdoor asset model trained by summerstay
