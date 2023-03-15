@@ -13,7 +13,7 @@ from diffusers.utils import load_image
 from pathlib import Path
 import openai
 
-def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny"):
+def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny_attempt2"):
   canny_controlnet_pipe = StableDiffusionControlNetPipeline.from_pretrained(local_model_path).to("cuda")
   canny_controlnet_pipe.safety_checker = lambda images, clip_input: (images, False)
   canny_controlnet_pipe.scheduler = UniPCMultistepScheduler.from_config(canny_controlnet_pipe.scheduler.config)
@@ -138,7 +138,7 @@ def inference(pipe, \
 
     #for `stable-diffusion-2-depth` model
     adjs = [x.split()[0] for x in prompts]
-    prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, digital art, trending on artstation, surrounded by completely black' for prompt, adj in zip(prompts,adjs)]
+    prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, pixel art' for prompt, adj in zip(prompts,adjs)]
 
     if negative_pmpt is not None:  
       negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
