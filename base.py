@@ -39,7 +39,7 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
       beta_schedule="scaled_linear",
       num_train_timesteps=1000,
       trained_betas=None,
-      predict_epsilon=True,
+#       predict_epsilon=True,
       thresholding=False,
       algorithm_type="dpmsolver++",
       solver_order=2,
