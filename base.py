@@ -324,3 +324,34 @@ def inference_txt2img(pipe, \
       
   #Returns a List of PIL Images
   return images[0]
+
+def make_background_magenta(PILforeground_source, PILbackground_source, erode_width, magenta_thresh = 0):
+    # take a background source that has a pure magenta background, and replace the background on the foreground source with it.
+    # this only works well if the background source was used with controlnet to generate the foreground source.
+    # erode_width is how much the background should contract before being applied
+    foreground_source = convertPILtocv2(PILforeground_source)
+    background_source = convertPILtocv2(PILbackground_source)
+    (height, width, colors) = foreground_source.shape
+    print(foreground_source.shape)
+    background_source = cv2.resize(background_source,(width, height), interpolation=cv2.INTER_LINEAR)
+    mask =  np.all(background_source == [255,0,255], axis=-1)
+    print(mask.dtype)
+    if erode_width>0:
+        kernel = np.ones((erode_width, erode_width), np.uint8)
+        mask = cv2.erode(mask.astype(np.uint8),kernel)
+    else:
+        kernel = np.ones((-erode_width, -erode_width), np.uint8)
+        mask = cv2.dilate(mask.astype(np.uint8),kernel)
+    foreground_source[mask.astype(bool)] = [255,0,255]
+
+    # opacity = np.where(foreground_source == [255,0,255])
+    # print(opacity[0].shape)
+    transparent_array = np.zeros((foreground_source.shape[0],foreground_source.shape[1],4),np.uint8)
+    transparent_array[:,:,:3]=foreground_source
+    # transparent_array[:,:,3]= np.where(foreground_source == [255,0,255], [0], [255])[:,:,0]
+    transparent_array[:,:,3]= np.where((foreground_source[0]>(255-magenta_thresh)) & (foreground_source[2]>(255-magenta_thresh)) & (foreground_source[1]<(magenta_thresh)), [0], [255])[:,:,0]
+    
+    print(transparent_array.shape)
+
+    output = convertcv2toPIL(transparent_array)
+    return output
