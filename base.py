@@ -13,7 +13,7 @@ from diffusers.utils import load_image
 from pathlib import Path
 import openai
 
-def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny_attempt2"):
+def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny"):
   canny_controlnet_pipe = StableDiffusionControlNetPipeline.from_pretrained(local_model_path).to("cuda")
   canny_controlnet_pipe.safety_checker = lambda images, clip_input: (images, False)
   canny_controlnet_pipe.scheduler = UniPCMultistepScheduler.from_config(canny_controlnet_pipe.scheduler.config)
