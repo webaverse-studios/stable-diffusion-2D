@@ -348,8 +348,8 @@ def make_background_magenta(PILforeground_source, PILbackground_source, erode_wi
     # print(opacity[0].shape)
     transparent_array = np.zeros((foreground_source.shape[0],foreground_source.shape[1],4),np.uint8)
     transparent_array[:,:,:3]=foreground_source
-    # transparent_array[:,:,3]= np.where(foreground_source == [255,0,255], [0], [255])[:,:,0]
-    transparent_array[:,:,3]= np.where((foreground_source[0]>(255-magenta_thresh)) & (foreground_source[2]>(255-magenta_thresh)) & (foreground_source[1]<(magenta_thresh)), [0], [255])[:,:,0]
+    transparent_array[:,:,3]= np.where(foreground_source == [255,0,255], [0], [255])[:,:,0]
+    # transparent_array[:,:,3]= np.where((foreground_source[0]>(255-magenta_thresh)) & (foreground_source[2]>(255-magenta_thresh)) & (foreground_source[1]<(magenta_thresh)), [0], [255])[:,:,0]
     
     print(transparent_array.shape)
 
