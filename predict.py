@@ -81,11 +81,16 @@ class Predictor(BasePredictor):
 
             orig_img_dims = load_image_generalised(input, resize = False).size
 
+            prompts = separate_prompts(prompts)
+
+            if negative_prompt is not None:  
+                negative_prompt = [negative_prompt for x in range(len(prompts))]
+
             images = None
             if req_type == 'asset':
                 if isTree:
                     images = inference_w_gpt(pipe_asset_magenta, init_img, \
-                            prompts = separate_prompts(prompts), \
+                            prompts = prompts, \
                             negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
@@ -98,7 +103,7 @@ class Predictor(BasePredictor):
             #else assume it to be a request for tiles
             else:
                 images = inference(pipe_tile, init_img, \
-                            prompts = separate_prompts(prompts), \
+                            prompts = prompts, \
                             negative_pmpt = negative_prompt,
                             strength = strength,
                             guidance_scale = guidance_scale,
