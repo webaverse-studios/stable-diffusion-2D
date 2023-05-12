@@ -75,8 +75,9 @@ class Predictor(BasePredictor):
         """Run a single prediction on the model"""
         try:
             # global pipe_asset 
-            global pipe_tile, pipe_asset_magenta
-            
+            global pipe_asset_magenta, pipe_asset_pixel
+            # global pipe_tile
+
             init_img = load_image_generalised(input, resize = True)
 
             orig_img_dims = load_image_generalised(input, resize = False).size
@@ -87,29 +88,29 @@ class Predictor(BasePredictor):
                 negative_prompt = [negative_prompt for x in range(len(prompts))]
 
             images = None
-            if req_type == 'asset':
-                if isTree:
-                    images = inference_w_gpt(pipe_asset_magenta, init_img, \
-                            prompts = prompts, \
-                            negative_pmpt = negative_prompt,
-                            strength = strength,
-                            guidance_scale = guidance_scale,
-                            req_type = req_type,
-                            num_inference_steps = num_inference_steps,
-                            seed = sd_seed)
-                else:
-                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
+            # if req_type == 'asset':
+            if isTree:
+                images = inference_w_gpt(pipe_asset_magenta, init_img, \
+                        prompts = prompts, \
+                        negative_pmpt = negative_prompt,
+                        strength = strength,
+                        guidance_scale = guidance_scale,
+                        req_type = req_type,
+                        num_inference_steps = num_inference_steps,
+                        seed = sd_seed)
+            else:
+                images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
 
             #else assume it to be a request for tiles
-            else:
-                images = inference(pipe_tile, init_img, \
-                            prompts = prompts, \
-                            negative_pmpt = negative_prompt,
-                            strength = strength,
-                            guidance_scale = guidance_scale,
-                            req_type = req_type,
-                            num_inference_steps = num_inference_steps,
-                            seed = sd_seed)
+            # else:
+            #     images = inference(pipe_tile, init_img, \
+            #                 prompts = prompts, \
+            #                 negative_pmpt = negative_prompt,
+            #                 strength = strength,
+            #                 guidance_scale = guidance_scale,
+            #                 req_type = req_type,
+            #                 num_inference_steps = num_inference_steps,
+            #                 seed = sd_seed)
 
             print('Type of each image: ', type(images[0]))
 
