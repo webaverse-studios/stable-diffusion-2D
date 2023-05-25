@@ -12,6 +12,7 @@ from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline
 from diffusers.utils import load_image
 from pathlib import Path
 import openai
+from postprocess import convertPILtocv2, convertcv2toPIL
 
 def init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny"):
   canny_controlnet_pipe = StableDiffusionControlNetPipeline.from_pretrained(local_model_path).to("cuda")
