@@ -204,6 +204,10 @@ def inference_with_edge_guidance(canny_controlnet_pipe, init_image, prompts, neg
     init_image = cv2.cvtColor(np.array(init_image), cv2.COLOR_RGB2BGR)
     edge_image = cv2.Canny(init_image,canny_lower,canny_upper)
     
+    if len(prompts)==1 and len(negative_pmpt)==1:
+      prompts = prompts[0]
+      negative_prompt = negative_pmpt[0]
+
     image = canny_controlnet_pipe(prompt=prompts, negative_prompt = negative_prompt, controlnet_hint=edge_image, num_inference_steps = num_inference_steps).images
 
     return image
@@ -259,7 +263,7 @@ def inference_w_gpt(pipe, \
 
       with autocast("cuda"):
         image = pipe(prompt=prompts_postproc,\
-                    negative_prompt = negative_pmpt,\
+                    negative_prompt = negative_pmpt[idx],\
                     image=init_img, 
                     strength=strength, 
                     num_inference_steps = num_inference_steps,
