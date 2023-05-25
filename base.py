@@ -203,7 +203,7 @@ def inference_with_edge_guidance(canny_controlnet_pipe, init_image, prompts, neg
     init_image = cv2.cvtColor(np.array(init_image), cv2.COLOR_RGB2BGR)
     edge_image = cv2.Canny(init_image,canny_lower,canny_upper)
     
-    image = canny_controlnet_pipe(prompt=prompts, negative_prompt = negative_prompt, controlnet_hint=edge_image, num_inference_steps = num_inference_steps).images[0]
+    image = canny_controlnet_pipe(prompt=prompts, negative_prompt = negative_prompt, controlnet_hint=edge_image, num_inference_steps = num_inference_steps).images
 
     return image
 
