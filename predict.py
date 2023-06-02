@@ -31,6 +31,8 @@ pipe_asset_pixel = init_canny_controlnet(local_model_path = "./control_TopdownBa
 #Magenta background 2D outdoor asset model trained by summerstay
 pipe_asset_magenta = init_model(local_model_path = "./magenta_tree_model")
 
+#Magenta model for txt2img generation, does not use ControlNet as there is no input image
+pipe_txt2img = init_model(local_model_path = "./diffusers_TopdownBalanced")
 
 def separate_prompts(inp_str: str):
   prompts = [x.strip() for x in inp_str.split(':')]
@@ -88,29 +90,39 @@ class Predictor(BasePredictor):
                 negative_prompt = [negative_prompt for x in range(len(prompts))]
 
             images = None
-            # if req_type == 'asset':
-            if isTree:
-                images = inference_w_gpt(pipe_asset_magenta, init_img, \
-                        prompts = prompts, \
-                        negative_pmpt = negative_prompt,
-                        strength = strength,
-                        guidance_scale = guidance_scale,
-                        req_type = req_type,
-                        num_inference_steps = num_inference_steps,
-                        seed = sd_seed)
-            else:
-                images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
+            if req_type == 'asset_img2img':
+                if isTree:
+                    images = inference_w_gpt(pipe_asset_magenta, init_img, \
+                            prompts = prompts, \
+                            negative_pmpt = negative_prompt,
+                            strength = strength,
+                            guidance_scale = guidance_scale,
+                            req_type = req_type,
+                            num_inference_steps = num_inference_steps,
+                            seed = sd_seed)
+                else:
+                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
 
-            #else assume it to be a request for tiles
-            # else:
-            #     images = inference(pipe_tile, init_img, \
-            #                 prompts = prompts, \
-            #                 negative_pmpt = negative_prompt,
-            #                 strength = strength,
-            #                 guidance_scale = guidance_scale,
-            #                 req_type = req_type,
-            #                 num_inference_steps = num_inference_steps,
-            #                 seed = sd_seed)
+            #else assume it to be a request for txt2img
+            else:
+                # images = inference(pipe_tile, init_img, \
+                #             prompts = prompts, \
+                #             negative_pmpt = negative_prompt,
+                #             strength = strength,
+                #             guidance_scale = guidance_scale,
+                #             req_type = req_type,
+                #             num_inference_steps = num_inference_steps,
+                #             seed = sd_seed)
+
+
+                generator = None
+                if sd_seed is not None:
+                    generator = torch.Generator(device='cuda').manual_seed(sd_seed)
+
+                negative_prompt = [negative_prompt for x in range(len(prompts))]
+                images = pipe_txt2img(prompts,\
+                        negative_prompt = negative_prompt, num_inference_steps=num_inference_steps,
+                         guidance_scale=guidance_scale, generator = generator)[0]
 
             print('Type of each image: ', type(images[0]))
 
