@@ -8,7 +8,7 @@ import cv2
 
 import torch
 from torch import autocast
-from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline, UniPCMultistepScheduler
+from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, UniPCMultistepScheduler, StableDiffusionImg2ImgPipeline, DPMSolverMultistepScheduler, StableDiffusionDepth2ImgPipeline, UniPCMultistepScheduler
 from diffusers.utils import load_image
 from pathlib import Path
 import openai
@@ -57,6 +57,12 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
     )
     pipe = pipe.to(device)
     return pipe
+  elif 'TopdownBalanced' in local_model_path:
+    pipe = StableDiffusionPipeline.from_pretrained(local_model_path, 
+#                                               #  scheduler = DPM_scheduler,
+                                               torch_dtype=torch.float16, safety_checker = None).to("cuda")
+
+    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
 
   else:
     #for `diffusers_summerstay_strdwvlly_asset_v2` model
