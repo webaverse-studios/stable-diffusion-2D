@@ -16,23 +16,13 @@ import torch
 
 print('cuda status is',torch.cuda.is_available())
 
-
-#strdwvlly style model for generating assets with black background
-# pipe_asset = init_model(local_model_path = "./diffusers_summerstay_strdwvlly_asset_v2")
-# pipe_asset = init_model(local_model_path = "./stable-diffusion-2-depth")
-
-
-#Texture model ('smlss style') for generating tiles/textures
-# pipe_tile =  init_model(local_model_path = "./diffusers_summerstay_seamless_textures_v1")
-
-pipe_asset_pixel = init_canny_controlnet(local_model_path = "./control_TopdownBalanced_canny")
-
-
-#Magenta background 2D outdoor asset model trained by summerstay
-pipe_asset_magenta = init_model(local_model_path = "./magenta_tree_model")
-
 #Magenta model for txt2img generation, does not use ControlNet as there is no input image
 pipe_txt2img = init_model(local_model_path = "./diffusers_TopdownBalanced")
+
+pipe_tree = init_model(local_model_path = "./treessss.ckpt")
+pipe_furniture = init_model(local_model_path = "./furnitureeee.ckpt")
+pipe_building = init_model(local_model_path = "./buildingggg.ckpt")
+
 
 def separate_prompts(inp_str: str):
   prompts = [x.strip() for x in inp_str.split(':')]
@@ -72,14 +62,13 @@ class Predictor(BasePredictor):
         canny_upper:int = Input(description="Canny upper bound for general pixel model with Canny Controlnet", default = 200),
         erode_width:int = Input(description="Canny BG Removal argument", default = 5),
         width:int = Input(description="Width for returning output image", default = None),
-        height:int = Input(description="Height for returning output image", default = None)
+        height:int = Input(description="Height for returning output image", default = None),
+        model: str = Input(description="Model to use based on the type of object you want to create. Options are tree, building, or furniture.", default = "furniture")
     ) -> Any:
         """Run a single prediction on the model"""
         try:
-            # global pipe_asset 
-            global pipe_asset_magenta, pipe_asset_pixel
-            # global pipe_tile
-
+            global pipe_asset_magenta, pipe_asset_pixel, pipe_tree, pipe_building, pipe_furniture
+            
             init_img = load_image_generalised(input, resize = True)
 
             orig_img_dims = load_image_generalised(input, resize = False).size
@@ -91,17 +80,21 @@ class Predictor(BasePredictor):
 
             images = None
             if req_type == 'asset_img2img':
-                if isTree:
-                    images = inference_w_gpt(pipe_asset_magenta, init_img, \
-                            prompts = prompts, \
-                            negative_pmpt = negative_prompt,
-                            strength = strength,
-                            guidance_scale = guidance_scale,
-                            req_type = req_type,
-                            num_inference_steps = num_inference_steps,
-                            seed = sd_seed)
-                else:
-                    images = inference_with_edge_guidance(pipe_asset_pixel, init_img, prompts, negative_prompt , canny_lower, canny_upper, num_inference_steps)
+              if model == 'tree':
+                used_model = pipe_tree
+              elif model == 'building':
+                used_model = pipe_building
+              else:
+                used_model = pipe_furniture
+              images = inference_w_gpt(used_model, init_img, \
+                          prompts = prompts, \
+                          negative_pmpt = negative_prompt,
+                          strength = strength,
+                          guidance_scale = guidance_scale,
+                          req_type = req_type,
+                          num_inference_steps = num_inference_steps,
+                          seed = sd_seed)
+              
 
             #else assume it to be a request for txt2img
             else:
