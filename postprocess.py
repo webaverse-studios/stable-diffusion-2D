@@ -1,8 +1,13 @@
+import io
 from PIL import Image
 import cv2
 import numpy as np
 from io import BytesIO
 import base64
+
+import requests
+
+API_KEY = ""
 
 #------------------------------------------------
 
@@ -214,3 +219,26 @@ def make_background_magenta(PILforeground_source, PILbackground_source, erode_wi
 
     output = convertcv2toPIL(transparent_array)
     return output
+
+def remBgPil(img: Image):
+    imgByteArr = io.BytesIO()
+    img.save(imgByteArr, format=img.format)
+    imgByteArr = imgByteArr.getvalue()
+    
+    r = requests.post('https://clipdrop-api.co/remove-background/v1',
+    files = {
+        'image_file': ('car.jpg', imgByteArr, 'image/jpeg'),
+        },
+    headers = { 'x-api-key': API_KEY}
+    )
+    if (r.ok):
+        image = Image.open(io.BytesIO(r.content))
+        return image    
+    else:
+        r.raise_for_status()
+    return None
+    
+
+def remBgNp(img: np.ndarray):
+    img = Image.fromarray(img)
+    return remBgPil(img)

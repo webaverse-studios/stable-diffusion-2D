@@ -3,7 +3,7 @@
 
 from cog import BasePredictor, BaseModel, File, Input, Path
 from base import init_model, make_background_magenta, load_image_generalised, inference, inference_w_gpt, inference_with_edge_guidance, init_canny_controlnet
-from postprocess import cut, cutv2, cut_magenta, splitHeightTo2, splitImageTo9, img2b4
+from postprocess import cut, cutv2, cut_magenta, remBgPil, splitHeightTo2, splitImageTo9, img2b4
 from PIL import Image
 
 
@@ -128,7 +128,7 @@ class Predictor(BasePredictor):
                 for gen_image in images:
                     # images_.append(cutv2(gen_image, init_img, outer_tolerance = cut_outer_tol, inner_tolerance = cut_inner_tol, radius = cut_radius))
                     # images_.append(cut_magenta(gen_image, outer_tol))
-                    images_.append(make_background_magenta(gen_image, init_img , erode_width))
+                    images_.append(remBgPil(gen_image))
             else:
                 for image in images:
                     images_.append(image)
