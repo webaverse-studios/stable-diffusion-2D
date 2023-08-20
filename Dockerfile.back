@@ -35,10 +35,10 @@ RUN curl -s -S -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master
 	pyenv install-latest "3.7.15" && \
 	pyenv global $(pyenv install-latest --print "3.7.15") && \
 	pip install "wheel<1"
-COPY ./cog-0.0.1.dev-py3-none-any.whl /tmp/cog-0.0.1.dev-py3-none-any.whl
+COPY .cog/tmp/build1162601152/cog-0.0.1.dev-py3-none-any.whl /tmp/cog-0.0.1.dev-py3-none-any.whl
 RUN --mount=type=cache,target=/root/.cache/pip pip install /tmp/cog-0.0.1.dev-py3-none-any.whl
 RUN --mount=type=cache,target=/var/cache/apt apt-get update -qq && apt-get install -qqy sox libsndfile1 ffmpeg && rm -rf /var/lib/apt/lists/*
-COPY ./requirements.txt /tmp/requirements.txt
+COPY .cog/tmp/build1162601152/requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.txt
 RUN pip install git+https://github.com/huggingface/transformers.git@fe9152f67c61c9af4721fdc9abbc9578acf5f16f
 RUN pip install openai

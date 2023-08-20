@@ -17,11 +17,11 @@ import torch
 print('cuda status is',torch.cuda.is_available())
 
 #Magenta model for txt2img generation, does not use ControlNet as there is no input image
-pipe_txt2img = init_model(local_model_path = "./diffusers_TopdownBalanced")
+# pipe_txt2img = init_model(local_model_path = "./diffusers_TopdownBalanced")
 
-pipe_tree = init_model(local_model_path = "./treessss.ckpt")
-pipe_furniture = init_model(local_model_path = "./furnitureeee.ckpt")
-pipe_building = init_model(local_model_path = "./buildingggg.ckpt")
+pipe_tree = init_model(local_model_path = "/AI/summerstay/diffusers/buildings")
+pipe_furniture = init_model(local_model_path = "/AI/summerstay/diffusers/furniture")
+pipe_building = init_model(local_model_path = "/AI/summerstay/diffusers/trees")
 
 
 def separate_prompts(inp_str: str):
