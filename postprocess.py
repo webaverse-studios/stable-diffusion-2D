@@ -7,7 +7,7 @@ import base64
 
 import requests
 
-API_KEY = "8c43b1ab96af692a1ec63bdcd03d9bec77be523ea7ab0350767933e7096141051a40a76525160a43a837263f7dbc9844"
+API_KEY = "a7f57c3189116c26ef21500affa3d35597d29c006dd7ed034b755704709febc33ecaaa916a6ff1b00bbe94d3d523e15d"
 
 #------------------------------------------------
 
@@ -221,9 +221,14 @@ def make_background_magenta(PILforeground_source, PILbackground_source, erode_wi
     return output
 
 def remBgPil(img: Image):
+    print("REMBG")
     imgByteArr = io.BytesIO()
-    img.save(imgByteArr, format=img.format)
+    print("Saving image byte array", img.format)
+    img.save(imgByteArr, format="png")
+    print("Saving image byte array")
     imgByteArr = imgByteArr.getvalue()
+
+    print("Preparing ByteArray for the for the request")
     
     r = requests.post('https://clipdrop-api.co/remove-background/v1',
     files = {
@@ -235,6 +240,7 @@ def remBgPil(img: Image):
         image = Image.open(io.BytesIO(r.content))
         return image    
     else:
+        print('Error occured on the request')
         r.raise_for_status()
     return None
     

@@ -72,20 +72,24 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
       beta_end=0.012,
       beta_schedule="scaled_linear",
       num_train_timesteps=1000,
+      steps_offset = 1,
+      use_karras_sigmas=True,
       trained_betas=None,
-      predict_epsilon=True,
+    #       predict_epsilon=True,
       thresholding=False,
       algorithm_type="dpmsolver++",
+      solver_order=2,
       solver_type="midpoint",
       lower_order_final=True,
     )
+
     pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
       local_model_path,
-      revision="fp16", 
+      revision="fp16",
       scheduler = DPM_scheduler,
       torch_dtype=torch.float16,
       safety_checker=None
-    )
+    )    
     pipe = pipe.to(device)
     return pipe
 
@@ -102,22 +106,28 @@ def load_image(image_path):
 def load_image_generalised(image_path, resize = False):
   path = Path(image_path)
 
+  print('input is => ', image_path)
+
   print('Loading file at => ', path)
 
   init_img = None
-  if isinstance(image_path, str) or path.is_file():
-      init_img = Image.open(image_path).convert("RGB")
-  else:
-    # if the image is a string of bytesarray.
-    init_img = base64.b64decode(image_path)
-
-  # If the image is sent as bytesarray
+    # If the image is sent as bytesarray
   if isinstance(image_path, (bytearray, bytes)):
       init_img = Image.open(io.BytesIO(image_path))
       init_img = init_img.convert("RGB")
+  else:      
+    if path.is_file():
+        init_img = Image.open(image_path).convert("RGB")
+    elif 'data:image/png;base64' in str(image_path):
+      image_path = str(image_path).replace('data:image/png;base64', '')
+      init_img = Image.open(io.BytesIO(base64.b64decode(image_path))).convert("RGB")
+    else:
+      # if the image is a string of bytesarray.
+      init_img = base64.b64decode(image_path)
 
-  
   #returns a PIL Image
+  print('Decoded image', init_img)
+
   if resize:
     return init_img.resize((512,512))
   else:
@@ -231,51 +241,48 @@ def inference_w_gpt(pipe, \
               seed = 1024):
   
   # print(prompts)
-  images = None
-  if req_type == 'asset':
+  images = []
+  #for summerstay's magenta model
+  adjs = [x.split()[0] for x in prompts]
+  adjectives = [f"{adj} world" for adj in adjs]
 
-    images = []
-    #for summerstay's magenta model
-    adjs = [x.split()[0] for x in prompts]
-    adjectives = [f"{adj} world" for adj in adjs]
+  for idx in range(len(prompts)):
+    prompt = """In creating art for video games, it is important that everything contributes to an overall style. If the style is 'candy world', then everything should be made of candy:
+    * tree: gumdrop fruit and licorice bark
+    * flower: lollipops with leaves
+    For an 'ancient Japan' setting, the items are simply a variation of the items that might be found in ancient Japan. Some might be unchanged:
+    * church: a Shinto shrine
+    * tree: a gnarled, beautiful cherry tree that looks like a bonsai tree
+    * tree stump: tree stump
+    * stone: a stone resembling those in zen gardens
+    If the style instead is '""" + adjectives[idx] + """' then the items might be:
+  * """ + prompts[idx] + """:"""
+    outtext = openai.Completion.create(
+        model="davinci",
+        prompt=prompt,
+              max_tokens=256,
+        temperature=0.5,
+        stop=['\n','.']
+        )
+    response = outtext.choices[0].text
+    print(prompt, '\n--------------------\n')
+    print(response, '\n--------------------')
 
-    for idx in range(len(prompts)):
-      prompt = """In creating art for video games, it is important that everything contributes to an overall style. If the style is 'candy world', then everything should be made of candy:
-      * tree: gumdrop fruit and licorice bark
-      * flower: lollipops with leaves
-      For an 'ancient Japan' setting, the items are simply a variation of the items that might be found in ancient Japan. Some might be unchanged:
-      * church: a Shinto shrine
-      * tree: a gnarled, beautiful cherry tree that looks like a bonsai tree
-      * tree stump: tree stump
-      * stone: a stone resembling those in zen gardens
-      If the style instead is '""" + adjectives[idx] + """' then the items might be:
-    * """ + prompts[idx] + """:"""
-      outtext = openai.Completion.create(
-          model="davinci",
-          prompt=prompt,
-                max_tokens=256,
-          temperature=0.5,
-          stop=['\n','.']
-          )
-      response = outtext.choices[0].text
-      print(prompt, '\n--------------------\n')
-      print(response, '\n--------------------')
+    prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
 
-      prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
+    generator = None
+    if seed is not None:
+      generator = torch.Generator(device=device).manual_seed(seed)
 
-      generator = None
-      if seed is not None:
-        generator = torch.Generator(device=device).manual_seed(seed)
-
-      with autocast("cuda"):
-        image = pipe(prompt=prompts_postproc,\
-                    negative_prompt = negative_pmpt[idx],\
-                    image=init_img, 
-                    strength=strength, 
-                    num_inference_steps = num_inference_steps,
-                    guidance_scale=guidance_scale,
-                    generator = generator)[0][0]
-        images.append(image)
+    with autocast("cuda"):
+      image = pipe(prompt=prompts_postproc,\
+                  negative_prompt = negative_pmpt[idx],\
+                  image=init_img, 
+                  strength=strength, 
+                  num_inference_steps = num_inference_steps,
+                  guidance_scale=guidance_scale,
+                  generator = generator)[0][0]
+      images.append(image)
   
       
   #Returns a List of PIL Images

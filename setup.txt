@@ -20,7 +20,7 @@ sudo docker run -d --rm -p 80:5000 cog-stable-diffusion-2d
 
 
 ### Docker Tag
-sudo docker tag cog-stable-diffusion-2d zerefdragoneel/stable-diffusion-2d:v3.0.0
+sudo docker tag cog-stable-diffusion-2d zerefdragoneel/stable-diffusion-2d:v11.0.0
 
 
 ### Docker Push to Live

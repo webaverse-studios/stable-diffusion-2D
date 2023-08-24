@@ -1,4 +1,5 @@
-git+https://github.com/takuma104/diffusers.git@9a37409663a53f775fa380db332d37d7ea75c915
+tornado==6.0.4
+diffusers
 numpy==1.21.6
 openpyxl==3.0.10
 PyOpenGL==3.1.6
@@ -14,8 +15,9 @@ torchaudio==0.12.1
 torchsummary==1.5.1
 torchtext==0.13.1
 torchvision==0.13.1
-tornado==6.0.4
 zipp==3.10.0
 opencv-contrib-python==4.6.0.66
 opencv-python==4.6.0.66
 opencv-python-headless==4.6.0.66
+transformers
+accelerate
