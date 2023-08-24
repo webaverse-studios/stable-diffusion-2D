@@ -33,47 +33,12 @@ def init_model(local_model_path = "./stable-diffusion-2-depth", device = "cuda")
     )
     pipe = pipe.to(device)
     return pipe
-  elif 'magenta' in local_model_path:
-    DPM_scheduler = DPMSolverMultistepScheduler(
-      beta_start=0.00085,
-      beta_end=0.012,
-      beta_schedule="scaled_linear",
-      num_train_timesteps=1000,
-      trained_betas=None,
-#       predict_epsilon=True,
-      thresholding=False,
-      algorithm_type="dpmsolver++",
-      solver_order=2,
-      solver_type="midpoint",
-      lower_order_final=True,
-    )
-    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-      local_model_path,
-#       'magenta_model',
-      revision="fp16", 
-      scheduler = DPM_scheduler,
-      torch_dtype=torch.float16,
-      safety_checker=None
-    )
-    pipe = pipe.to(device)
-    return pipe
-  elif 'TopdownBalanced' in local_model_path:
-    pipe = StableDiffusionPipeline.from_pretrained(local_model_path, 
-#                                               #  scheduler = DPM_scheduler,
-                                               torch_dtype=torch.float16, safety_checker = None).to("cuda")
-
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-
   else:
-    #for `diffusers_summerstay_strdwvlly_asset_v2` model
-    #----------------------------------------
     DPM_scheduler = DPMSolverMultistepScheduler(
       beta_start=0.00085,
       beta_end=0.012,
       beta_schedule="scaled_linear",
       num_train_timesteps=1000,
-      steps_offset = 1,
-      use_karras_sigmas=True,
       trained_betas=None,
     #       predict_epsilon=True,
       thresholding=False,
