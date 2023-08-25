@@ -105,35 +105,20 @@ def inference(pipe, \
               strength: float = 0.90,\
               num_inference_steps: int = 20,\
               guidance_scale: float =20,
-              negative_pmpt:str = "ugly, contrast, 3D",
+              negative_pmpt:str = "",
               req_type = "asset",
               device = "cuda",
               seed = None):
   
   # print(prompts)
-  prompts_postproc = None
   images = None
   if req_type == 'asset':
-    #for `diffusers_summerstay_strdwvlly_asset_v2` model
-    # prompts_postproc = [f'{prompt}, surrounded by completely black, strdwvlly style, completely black background, HD, detailed' for prompt in prompts]
-    # negative_pmpt = "isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry"
-
-    #for `stable-diffusion-2-depth` model
-    adjs = [x.split()[0] for x in prompts]
-    prompts_postproc = [f'{prompt}, {adj} style, {adj} appearance, {adj}, pixel art' for prompt, adj in zip(prompts,adjs)]
-
-    if negative_pmpt is not None:  
-      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
-    else:
-      negative_prompt = None
-    # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
-
     generator = None
     if seed is not None:
       generator = torch.Generator(device=device).manual_seed(seed)
 
     with autocast("cuda"):
-        images = pipe(prompt=prompts_postproc,\
+        images = pipe(prompt=prompts,\
                     negative_prompt = negative_prompt,\
                     image=init_img, 
                     strength=strength, 
@@ -142,22 +127,12 @@ def inference(pipe, \
                     generator = generator)
     images = images[0]
   else:
-    prompts = [x.replace('tile', 'texture') for x in prompts]
-    prompts_postproc = [f'{prompt}, studio ghibli style, cartoon style, smlss style' for prompt in prompts]
-
-    if negative_pmpt is not None:  
-      negative_prompt = [negative_pmpt for x in range(len(prompts_postproc))]
-    else:
-      negative_prompt = ["isometric, interior, island, farm, monochrome, glowing, text, character, sky, UI, pixelated, blurry" for x in range(len(prompts_postproc))]
-      
-    # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
-
     generator = None
     if seed is not None:
       generator = torch.Generator(device=device).manual_seed(seed)
 
     with autocast("cuda"):
-        images = pipe(prompt=prompts_postproc,\
+        images = pipe(prompt=prompts,\
                     negative_prompt = negative_prompt,\
                     image=init_img, 
                     strength=strength, 
@@ -233,8 +208,8 @@ def inference_w_gpt(pipe, \
     print(prompt, '\n--------------------\n')
     print(response, '\n--------------------')
 
-    prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
-
+    # prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
+    prompts_postproc = prompts
     generator = None
     if seed is not None:
       generator = torch.Generator(device=device).manual_seed(seed)
@@ -267,7 +242,7 @@ def init_txt2img_model(local_model_path = "./stable-diffusion-v1-5", device = "c
     beta_schedule="scaled_linear",
     num_train_timesteps=1000,
     trained_betas=None,
-    predict_epsilon=True,
+    # predict_epsilon=True,
     thresholding=False,
     algorithm_type="dpmsolver++",
     solver_type="midpoint",
@@ -292,14 +267,14 @@ def inference_txt2img(pipe, \
               device = "cuda"):
   
   # print(prompts)
-  negative_prompt =  "isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"
-  prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
-  negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
+  # negative_prompt =  "isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"
+  # prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
+  # negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
   # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
 
   generator = torch.Generator(device=device).manual_seed(1024)
   with autocast("cuda"):
-      images = pipe(prompt=prompts_postproc,\
+      images = pipe(prompt=prompts,\
                   negative_prompt = negative_prompt,\
                   strength=strength, 
                   num_inference_steps = num_inference_steps,
@@ -307,34 +282,3 @@ def inference_txt2img(pipe, \
       
   #Returns a List of PIL Images
   return images[0]
-
-def make_background_magenta(PILforeground_source, PILbackground_source, erode_width, magenta_thresh = 0):
-    # take a background source that has a pure magenta background, and replace the background on the foreground source with it.
-    # this only works well if the background source was used with controlnet to generate the foreground source.
-    # erode_width is how much the background should contract before being applied
-    foreground_source = convertPILtocv2(PILforeground_source)
-    background_source = convertPILtocv2(PILbackground_source)
-    (height, width, colors) = foreground_source.shape
-    print(foreground_source.shape)
-    background_source = cv2.resize(background_source,(width, height), interpolation=cv2.INTER_LINEAR)
-    mask =  np.all(background_source == [255,0,255], axis=-1)
-    print(mask.dtype)
-    if erode_width>0:
-        kernel = np.ones((erode_width, erode_width), np.uint8)
-        mask = cv2.erode(mask.astype(np.uint8),kernel)
-    else:
-        kernel = np.ones((-erode_width, -erode_width), np.uint8)
-        mask = cv2.dilate(mask.astype(np.uint8),kernel)
-    foreground_source[mask.astype(bool)] = [255,0,255]
-
-    # opacity = np.where(foreground_source == [255,0,255])
-    # print(opacity[0].shape)
-    transparent_array = np.zeros((foreground_source.shape[0],foreground_source.shape[1],4),np.uint8)
-    transparent_array[:,:,:3]=foreground_source
-    transparent_array[:,:,3]= np.where(foreground_source == [255,0,255], [0], [255])[:,:,0]
-    # transparent_array[:,:,3]= np.where((foreground_source[0]>(255-magenta_thresh)) & (foreground_source[2]>(255-magenta_thresh)) & (foreground_source[1]<(magenta_thresh)), [0], [255])[:,:,0]
-    
-    print(transparent_array.shape)
-
-    output = convertcv2toPIL(transparent_array)
-    return output
