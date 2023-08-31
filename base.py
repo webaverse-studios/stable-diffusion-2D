@@ -174,8 +174,8 @@ def inference_w_gpt(pipe, \
               prompts = ["blue house", "blacksmith workshop"], \
               strength: float = 0.90,\
               num_inference_steps: int = 20,\
-              guidance_scale: float =20,
-              negative_pmpt:str = "base, ground, terrain, child's drawing, sillhouette, dark, shadowed, green blob, cast shadow on the ground, background pattern",
+              guidance_scale: float =7,
+              negative_pmpt:str = "terrain, ground",
               req_type = "asset",
               device = "cuda",
               seed = 1024):
@@ -208,7 +208,7 @@ def inference_w_gpt(pipe, \
     print(prompt, '\n--------------------\n')
     print(response, '\n--------------------')
 
-    # prompts_postproc = "robust, thick trunk with visible roots, concept art of " + response + ", " + adjectives[idx] + ", game asset surrounded by pure magenta, view from above, studio ghibli and disney style, completely flat magenta background" 
+    # prompts_postproc = response + ", " + adjectives[idx] + ", game art asset" 
     prompts_postproc = prompts
     generator = None
     if seed is not None:
@@ -242,7 +242,6 @@ def init_txt2img_model(local_model_path = "./stable-diffusion-v1-5", device = "c
     beta_schedule="scaled_linear",
     num_train_timesteps=1000,
     trained_betas=None,
-    # predict_epsilon=True,
     thresholding=False,
     algorithm_type="dpmsolver++",
     solver_type="midpoint",
@@ -266,12 +265,6 @@ def inference_txt2img(pipe, \
               guidance_scale=20,
               device = "cuda"):
   
-  # print(prompts)
-  # negative_prompt =  "isometric, terrain, interior, ground, island, farm, at night, dark, ground, monochrome, glowing, text, character, sky, UI, pixelated, blurry, tiled squares"
-  # prompts_postproc = [f'top-down view of a {prompt}, surrounded by completely black, stardew valley, strdwvlly style, completely black background, HD, detailed, clean lines, realistic' for prompt in prompts]
-  # negative_prompt = [negative_prompt for x in range(len(prompts_postproc))]
-  # print(prompts_postproc[0], '!!!!!!!!!!\n', prompts_postproc[1])
-
   generator = torch.Generator(device=device).manual_seed(1024)
   with autocast("cuda"):
       images = pipe(prompt=prompts,\
