@@ -24,7 +24,7 @@ try:
     if mode == "buildings":
         pipe_building = init_model(local_model_path = "/AI/summerstay/diffusers/trees")
     if mode == "plants":
-        pipe_plant = init_model(local_model_path = "/AI/summerstay/diffusers/plants")
+        pipe_plants = init_model(local_model_path = "/AI/summerstay/diffusers/plants")
     
         
 
@@ -34,8 +34,7 @@ except KeyError:
     pipe_building = init_model(local_model_path = "/AI/summerstay/diffusers/buildings", device="cuda:0")
     pipe_furniture = init_model(local_model_path = "/AI/summerstay/diffusers/furniture", device="cuda:1")
     pipe_tree = init_model(local_model_path = "/AI/summerstay/diffusers/trees", device="cuda:2")
-    pipe_plant = init_model(local_model_path = "/AI/summerstay/diffusers/plants", device="cuda:3")
-    
+    pipe_plants = init_model(local_model_path = "/AI/summerstay/diffusers/plants", device="cuda:0")
 
 
 def separate_prompts(inp_str: str):
@@ -80,6 +79,8 @@ def run_predict(
                 used_model = pipe_tree
               elif model == 'building':
                 used_model = pipe_building
+              elif model == 'plants':
+                used_model = pipe_plants
               else:
                 used_model = pipe_furniture
               
