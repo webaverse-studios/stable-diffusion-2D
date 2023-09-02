@@ -34,7 +34,7 @@ except KeyError:
     pipe_building = init_model(local_model_path = "/AI/summerstay/diffusers/buildings", device="cuda:0")
     pipe_furniture = init_model(local_model_path = "/AI/summerstay/diffusers/furniture", device="cuda:1")
     pipe_tree = init_model(local_model_path = "/AI/summerstay/diffusers/trees", device="cuda:2")
-    pipe_plants = init_model(local_model_path = "/AI/summerstay/diffusers/plants", device="cuda:0")
+    pipe_plants = init_model(local_model_path = "/AI/summerstay/diffusers/plants", device="cuda:3")
 
 
 def separate_prompts(inp_str: str):
