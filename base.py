@@ -186,6 +186,11 @@ def inference_w_gpt(pipe, \
   adjs = [x.split()[0] for x in prompts]
   adjectives = [f"{adj} world" for adj in adjs]
 
+  if negative_pmpt is not None:  
+      negative_prompt = [negative_pmpt for x in range(len(prompts))]
+  else:
+      negative_prompt = None
+      
   for idx in range(len(prompts)):
     prompt = """In creating art for video games, it is important that everything contributes to an overall style. If the style is 'candy world', then everything should be made of candy:
     * tree: gumdrop fruit and licorice bark
