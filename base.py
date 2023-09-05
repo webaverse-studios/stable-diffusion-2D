@@ -221,7 +221,7 @@ def inference_w_gpt(pipe, \
 
     with autocast("cuda"):
       image = pipe(prompt=prompts_postproc,\
-                  negative_prompt = negative_pmpt[idx],\
+                  negative_prompt = negative_prompt[idx],\
                   image=init_img, 
                   strength=strength, 
                   num_inference_steps = num_inference_steps,
